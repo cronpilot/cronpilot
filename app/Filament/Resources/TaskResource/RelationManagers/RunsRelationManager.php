@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\TaskResource\RelationManagers;
 
 use App\Enums\RunStatus;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\RestoreBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -30,7 +33,8 @@ class RunsRelationManager extends RelationManager
                         'tabler-check' => RunStatus::SUCCESSFUL,
                         'tabler-x' => RunStatus::FAILED,
                         'tabler-run' => RunStatus::RUNNING,
-                    ]),
+                    ])
+                    ->searchable(),
                 TextColumn::make('output')
                     ->limit(60)
                     ->color('gray')
@@ -42,8 +46,10 @@ class RunsRelationManager extends RelationManager
                     ->toggleable(),
                 TextColumn::make('triggerable.name')
                     ->label('Triggered by')
+                    ->searchable()
                     ->toggleable(),
                 TextColumn::make('created_at')
+                    ->label('Start time')
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('updated_at')
@@ -58,11 +64,47 @@ class RunsRelationManager extends RelationManager
             ->filters([
                 //
             ])
+            ->actions([
+                ViewAction::make(),
+            ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                TextEntry::make('status')
+                    ->badge()
+                    ->colors([
+                        'success' => RunStatus::SUCCESSFUL,
+                        'danger' => RunStatus::FAILED,
+                        'gray' => RunStatus::RUNNING,
+                    ])
+                    ->icons([
+                        'tabler-check' => RunStatus::SUCCESSFUL,
+                        'tabler-x' => RunStatus::FAILED,
+                        'tabler-run' => RunStatus::RUNNING,
+                    ]),
+                TextEntry::make('durationForHumans')
+                    ->label('Run duration'),
+                TextEntry::make('output')
+                    ->columnSpanFull()
+                    ->color('gray'),
+                TextEntry::make('triggerable.name')
+                    ->label('Triggered by'),
+                TextEntry::make('created_at')
+                    ->label('Start time')
+                    ->dateTime(),
+                TextEntry::make('updated_at')
+                    ->dateTime(),
+                TextEntry::make('deleted_at')
+                    ->dateTime(),
             ]);
     }
 }
