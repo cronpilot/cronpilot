@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\TaskResource\RelationManagers;
 
 use App\Enums\RunStatus;
+use App\Models\Run;
+use App\Models\Task;
+use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -46,6 +49,11 @@ class RunsRelationManager extends RelationManager
                     ->toggleable(),
                 TextColumn::make('triggerable.name')
                     ->label('Triggered by')
+                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                        User::class => 'tabler-user',
+                        Task::class => 'tabler-checkbox',
+                        default => null,
+                    })
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('created_at')
@@ -97,7 +105,12 @@ class RunsRelationManager extends RelationManager
                     ->columnSpanFull()
                     ->color('gray'),
                 TextEntry::make('triggerable.name')
-                    ->label('Triggered by'),
+                    ->label('Triggered by')
+                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                        User::class => 'tabler-user',
+                        Task::class => 'tabler-checkbox',
+                        default => null,
+                    }),
                 TextEntry::make('created_at')
                     ->label('Start time')
                     ->dateTime(),
