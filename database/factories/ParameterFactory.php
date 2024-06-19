@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Task;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,6 +23,7 @@ class ParameterFactory extends Factory
         ]);
 
         return [
+            'task_id' => Task::factory(),
             'name' => fake()->word(),
             'type' => $type,
             'description' => fake()->sentence(),

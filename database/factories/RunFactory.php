@@ -23,15 +23,15 @@ class RunFactory extends Factory
 
         return [
             'task_id' => Task::factory(),
-            'status' => RunStatus::cases(),
+            'status' => fake()->randomElement(RunStatus::cases()),
             'output' => fake()->sentence(),
             'run_time' => fake()->numberBetween(1, 30),
-            'triggerable_id' => $triggerable?->factory(),
+            'triggerable_id' => $triggerable ? $triggerable::factory() : null,
             'triggerable_type' => $triggerable,
         ];
     }
 
-    public function triggerable()
+    public function triggerable(): ?string
     {
         return fake()->randomElement([
             User::class,

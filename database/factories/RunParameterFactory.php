@@ -19,8 +19,8 @@ class RunParameterFactory extends Factory
     public function definition(): array
     {
         return [
-            'run_id' => Run::class,
-            'parameter_id' => Parameter::class,
+            'run_id' => Run::factory(),
+            'parameter_id' => Parameter::factory(),
             'value' => json_encode(fake()->word()),
         ];
     }

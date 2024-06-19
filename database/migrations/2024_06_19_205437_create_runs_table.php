@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('status');
             $table->text('output');
             $table->integer('run_time');
-            $table->foreignId('triggerable_id');
-            $table->string('triggerable_type');
+            $table->foreignId('triggerable_id')->nullable();
+            $table->string('triggerable_type')->nullable();
             $table->index(['triggerable_id', 'triggerable_type']);
             $table->softDeletes();
             $table->timestamps();

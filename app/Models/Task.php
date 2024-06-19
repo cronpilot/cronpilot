@@ -22,6 +22,11 @@ class Task extends Model
         return $this->belongsTo(Server::class);
     }
 
+    public function parameters(): HasMany
+    {
+        return $this->hasMany(Parameter::class);
+    }
+
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
