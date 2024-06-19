@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RunStatus;
+use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,5 +32,10 @@ class Run extends Model
     public function parameters(): HasMany
     {
         return $this->hasMany(RunParameter::class);
+    }
+
+    public function getDurationForHumansAttribute(): string
+    {
+        return CarbonInterval::seconds($this->duration)->cascade()->forHumans();
     }
 }

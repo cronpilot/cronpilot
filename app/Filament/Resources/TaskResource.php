@@ -8,6 +8,7 @@ use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\Pages\ViewTask;
+use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Models\Task;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -71,6 +72,11 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('description')
+                    ->limit(40)
+                    ->color('gray')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
                     ->colors([
@@ -133,10 +139,13 @@ class TaskResource extends Resource
         return $infolist
             ->columns(3)
             ->schema([
+                TextEntry::make('name'),
                 TextEntry::make('tenant.name'),
                 TextEntry::make('server.name')
                     ->placeholder('No server'),
-                TextEntry::make('name'),
+                TextEntry::make('description')
+                    ->columnSpanFull()
+                    ->color('gray'),
                 TextEntry::make('status')
                     ->badge()
                     ->colors([
@@ -174,7 +183,7 @@ class TaskResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RunsRelationManager::class,
         ];
     }
 

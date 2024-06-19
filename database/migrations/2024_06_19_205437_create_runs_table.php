@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(Task::class);
             $table->string('status');
             $table->text('output');
-            $table->integer('run_time');
+            $table->integer('duration');
             $table->foreignId('triggerable_id')->nullable();
             $table->string('triggerable_type')->nullable();
             $table->index(['triggerable_id', 'triggerable_type']);

@@ -25,7 +25,7 @@ class RunFactory extends Factory
             'task_id' => Task::factory(),
             'status' => fake()->randomElement(RunStatus::cases()),
             'output' => fake()->sentence(),
-            'run_time' => fake()->numberBetween(1, 30),
+            'duration' => fake()->numberBetween(1, 30),
             'triggerable_id' => $triggerable ? $triggerable::factory() : null,
             'triggerable_type' => $triggerable,
         ];
