@@ -19,20 +19,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Tenant::factory()
+        Tenant::factory(3)
             ->has(User::factory(5))
+            ->has(Server::factory(3))
             ->has(
-                Server::factory(3)
+                Task::factory(10)
                     ->has(
-                        Task::factory(10)
-                            ->has(
-                                Parameter::factory(3)
-                                    ->has(RunParameter::factory(), 'runs')
-                            )
-                            ->has(
-                                Run::factory(10)
-                                    ->has(RunParameter::factory(), 'parameters')
-                            )
+                        Parameter::factory(3)
+                            ->has(RunParameter::factory(), 'runs')
+                    )
+                    ->has(
+                        Run::factory(10)
+                            ->has(RunParameter::factory(), 'parameters')
                     )
             )
             ->create();

@@ -18,7 +18,7 @@ class ServerFactory extends Factory
     public function definition(): array
     {
         return [
-            'tenant_id' => Tenant::class,
+            'tenant_id' => Tenant::factory(),
             'name' => ucwords(fake()->words(3, true)),
             'ssh_url' => fake()->url(),
             'ssh_port' => 22,

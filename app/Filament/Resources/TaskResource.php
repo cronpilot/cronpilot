@@ -203,6 +203,7 @@ class TaskResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ])
+            ->where('tenant_id', request()->user()->tenant_id);
     }
 }
