@@ -46,6 +46,7 @@ class TaskResource extends Resource
                 Select::make('server_id')
                     ->relationship('server', 'name'),
                 TextInput::make('name')
+                    ->columnSpanFull()
                     ->required()
                     ->maxLength(255),
                 Textarea::make('description')
