@@ -4,11 +4,11 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum RunStatus: string implements HasLabel
+enum TaskStatus: string implements HasLabel
 {
-    case RUNNING = 'Running';
-    case SUCCESSFUL = 'Successful';
-    case FAILED = 'Failed';
+    case PREFLIGHT = 'Pre-flight';
+    case ACTIVE = 'Active';
+    case DISABLED = 'Disabled';
 
     public function getLabel(): ?string
     {

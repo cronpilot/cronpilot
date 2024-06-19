@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(Server::class)->nullable();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->text('status');
             $table->text('schedule')->nullable();
             $table->text('command')->nullable();
             $table->softDeletes();
