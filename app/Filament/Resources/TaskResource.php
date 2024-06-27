@@ -6,6 +6,7 @@ use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\Pages\ViewTask;
+use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Models\Task;
 use Filament\Forms\Components\Select;
@@ -132,7 +133,6 @@ class TaskResource extends Resource
             ->columns(3)
             ->schema([
                 TextEntry::make('name'),
-                TextEntry::make('tenant.name'),
                 TextEntry::make('server.name')
                     ->placeholder('No server'),
                 TextEntry::make('description')
@@ -158,6 +158,7 @@ class TaskResource extends Resource
     public static function getRelations(): array
     {
         return [
+            ParametersRelationManager::class,
             RunsRelationManager::class,
         ];
     }
