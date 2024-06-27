@@ -6,6 +6,7 @@ use App\Filament\Resources\RunResource\Pages\CreateRun;
 use App\Filament\Resources\RunResource\Pages\EditRun;
 use App\Filament\Resources\RunResource\Pages\ListRuns;
 use App\Filament\Resources\RunResource\Pages\ViewRun;
+use App\Filament\Resources\RunResource\RelationManagers\ParametersRelationManager;
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
@@ -171,7 +172,7 @@ class RunResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ParametersRelationManager::class,
         ];
     }
 
