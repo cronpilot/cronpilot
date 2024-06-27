@@ -37,13 +37,12 @@ class TaskResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
+    protected static ?int $navigationSort = 3;
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Select::make('tenant_id')
-                    ->relationship('tenant', 'name')
-                    ->required(),
                 Select::make('server_id')
                     ->relationship('server', 'name'),
                 TextInput::make('name')
@@ -63,10 +62,6 @@ class TaskResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('tenant.name')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('server.name')
                     ->placeholder('No server')
                     ->sortable()
@@ -182,7 +177,6 @@ class TaskResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ])
-            ->where('tenant_id', request()->user()->tenant_id);
+            ]);
     }
 }

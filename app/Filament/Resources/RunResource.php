@@ -33,6 +33,8 @@ class RunResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
+    protected static ?int $navigationSort = 4;
+
     public static function table(Table $table, bool $showTask = true): Table
     {
         $columns = collect();
@@ -72,7 +74,7 @@ class RunResource extends Resource
             TextColumn::make('triggerable.name')
                 ->label('Triggered by')
                 ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                    User::class => 'tabler-user',
+                    User::class => UserResource::ICON,
                     Task::class => TaskResource::ICON,
                     default => null,
                 })
@@ -144,8 +146,13 @@ class RunResource extends Resource
             TextEntry::make('triggerable.name')
                 ->label('Triggered by')
                 ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                    User::class => 'tabler-user',
+                    User::class => UserResource::ICON,
                     Task::class => TaskResource::ICON,
+                    default => null,
+                })
+                ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
+                    User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
+                    Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
                     default => null,
                 }),
             TextEntry::make('created_at')
