@@ -98,6 +98,7 @@ class UserResource extends Resource
                 TextEntry::make('email_verified_at')
                     ->dateTime(),
                 TextEntry::make('deleted_at')
+                    ->hidden(fn (User $record): bool => ! $record->deleted_at)
                     ->dateTime(),
                 TextEntry::make('created_at')
                     ->dateTime(),

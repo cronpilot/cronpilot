@@ -25,6 +25,7 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\MultiSelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,80 +39,110 @@ class TaskResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
-    public static function form(Form $form): Form
+    public static function form(Form $form, bool $serverSelect = true): Form
     {
-        return $form
-            ->schema([
+        $schema = collect();
+
+        if ($serverSelect) {
+            $schema->push(
                 Select::make('server_id')
-                    ->relationship('server', 'name'),
-                TextInput::make('name')
-                    ->columnSpanFull()
-                    ->required()
-                    ->maxLength(255),
-                Textarea::make('description')
-                    ->columnSpanFull(),
-                Textarea::make('schedule')
-                    ->columnSpanFull(),
-                Textarea::make('command')
-                    ->columnSpanFull(),
-            ]);
+                    ->relationship('server', 'name')
+                    ->searchable()
+                    ->preload(),
+            );
+        }
+
+        $schema->push(
+            TextInput::make('name')
+                ->columnSpanFull()
+                ->required()
+                ->maxLength(255),
+            Textarea::make('description')
+                ->columnSpanFull(),
+            Textarea::make('schedule')
+                ->columnSpanFull(),
+            Textarea::make('command')
+                ->columnSpanFull(),
+        );
+
+        return $form
+            ->schema($schema->toArray());
     }
 
-    public static function table(Table $table): Table
+    public static function table(Table $table, bool $showServer = true): Table
     {
-        return $table
-            ->columns([
+        $columns = collect();
+        $filters = collect();
+
+        if ($showServer) {
+            $columns->push(
                 TextColumn::make('server.name')
                     ->placeholder('No server')
+                    ->icon(ServerResource::ICON)
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('name')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('description')
-                    ->limit(40)
-                    ->color('gray')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (Task $record): string => $record->status->getColor())
-                    ->icon(fn (Task $record): string => $record->status->getIcon())
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-                TextColumn::make('lastRunStatus')
-                    ->badge()
-                    ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
-                    ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon())
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-                TextColumn::make('runs_count')
-                    ->counts('runs')
-                    ->badge()
-                    ->color('warning')
-                    ->icon(RunResource::ICON)
-                    ->toggleable(),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                TrashedFilter::make(),
-            ])
+            );
+
+            $filters->push(
+                MultiSelectFilter::make('server')
+                    ->relationship('server', 'name')
+                    ->preload(),
+            );
+        }
+
+        $columns->push(
+            TextColumn::make('name')
+                ->sortable()
+                ->searchable(),
+            TextColumn::make('description')
+                ->limit(40)
+                ->color('gray')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('status')
+                ->badge()
+                ->color(fn (Task $record): string => $record->status->getColor())
+                ->icon(fn (Task $record): string => $record->status->getIcon())
+                ->sortable()
+                ->searchable()
+                ->toggleable(),
+            TextColumn::make('lastRunStatus')
+                ->badge()
+                ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
+                ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon())
+                ->sortable()
+                ->searchable()
+                ->toggleable(),
+            TextColumn::make('runs_count')
+                ->counts('runs')
+                ->badge()
+                ->color('warning')
+                ->icon(RunResource::ICON)
+                ->toggleable(),
+            TextColumn::make('deleted_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        );
+
+        $filters->push(
+            TrashedFilter::make(),
+        );
+
+        return $table
+            ->columns($columns->toArray())
+            ->filters($filters->toArray())
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
@@ -127,32 +158,47 @@ class TaskResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Infolist $infolist, bool $showServer = true): Infolist
     {
-        return $infolist
-            ->columns(3)
-            ->schema([
-                TextEntry::make('name'),
+        $schema = collect([
+            TextEntry::make('name'),
+        ]);
+
+        if ($showServer) {
+            $schema->push(
                 TextEntry::make('server.name')
-                    ->placeholder('No server'),
-                TextEntry::make('description')
-                    ->columnSpanFull()
-                    ->color('gray'),
-                TextEntry::make('status')
-                    ->badge()
-                    ->color(fn (Task $record): string => $record->status->getColor())
-                    ->icon(fn (Task $record): string => $record->status->getIcon()),
-                TextEntry::make('lastRunStatus')
-                    ->badge()
-                    ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
-                    ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon()),
-                TextEntry::make('deleted_at')
-                    ->dateTime(),
-                TextEntry::make('created_at')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),
-            ]);
+                    ->placeholder('No server')
+                    ->icon(ServerResource::ICON)
+                    ->url(fn (Task $record): ?string => $record->server
+                        ? ServerResource::getUrl('view', ['record' => $record->server])
+                        : null
+                    ),
+            );
+        }
+
+        $schema->push(
+            TextEntry::make('description')
+                ->columnSpanFull()
+                ->color('gray'),
+            TextEntry::make('status')
+                ->badge()
+                ->color(fn (Task $record): string => $record->status->getColor())
+                ->icon(fn (Task $record): string => $record->status->getIcon()),
+            TextEntry::make('lastRunStatus')
+                ->badge()
+                ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
+                ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon()),
+            TextEntry::make('deleted_at')
+                ->dateTime()
+                ->hidden(fn (Task $record): bool => ! $record->deleted_at),
+            TextEntry::make('created_at')
+                ->dateTime(),
+            TextEntry::make('updated_at')
+                ->dateTime(),
+        );
+
+        return $infolist
+            ->schema($schema->toArray());
     }
 
     public static function getRelations(): array
