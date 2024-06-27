@@ -18,6 +18,6 @@ class RunsRelationManager extends RelationManager
 
     public function infolist(Infolist $infolist): Infolist
     {
-        return RunResource::infolist($infolist);
+        return RunResource::infolist($infolist, false);
     }
 }

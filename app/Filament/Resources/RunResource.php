@@ -113,34 +113,48 @@ class RunResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Infolist $infolist, bool $showTask = true): Infolist
     {
+        $schema = collect();
+
+        if ($showTask) {
+            $schema->push(
+                TextEntry::make('task.name')
+                    ->icon('tabler-checkbox')
+                    ->url(fn (Run $record): string => TaskResource::getUrl('view', [
+                        'record' => $record->task,
+                    ])),
+            );
+        }
+
+        $schema->push(
+            TextEntry::make('status')
+                ->badge()
+                ->color(fn (Run $record): string => $record->status->getColor())
+                ->icon(fn (Run $record): string => $record->status->getIcon()),
+            TextEntry::make('durationForHumans')
+                ->label('Run duration'),
+            TextEntry::make('output')
+                ->columnSpanFull()
+                ->color('gray'),
+            TextEntry::make('triggerable.name')
+                ->label('Triggered by')
+                ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                    User::class => 'tabler-user',
+                    Task::class => 'tabler-checkbox',
+                    default => null,
+                }),
+            TextEntry::make('created_at')
+                ->label('Start time')
+                ->dateTime(),
+            TextEntry::make('updated_at')
+                ->dateTime(),
+            TextEntry::make('deleted_at')
+                ->dateTime(),
+        );
+
         return $infolist
-            ->schema([
-                TextEntry::make('status')
-                    ->badge()
-                    ->color(fn (Run $record): string => $record->status->getColor())
-                    ->icon(fn (Run $record): string => $record->status->getIcon()),
-                TextEntry::make('durationForHumans')
-                    ->label('Run duration'),
-                TextEntry::make('output')
-                    ->columnSpanFull()
-                    ->color('gray'),
-                TextEntry::make('triggerable.name')
-                    ->label('Triggered by')
-                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                        User::class => 'tabler-user',
-                        Task::class => 'tabler-checkbox',
-                        default => null,
-                    }),
-                TextEntry::make('created_at')
-                    ->label('Start time')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),
-                TextEntry::make('deleted_at')
-                    ->dateTime(),
-            ]);
+            ->schema($schema->toArray());
     }
 
     public static function getRelations(): array
