@@ -56,6 +56,7 @@ class RunResource extends Resource
                 ->badge()
                 ->color(fn (Run $record): string => $record->status->getColor())
                 ->icon(fn (Run $record): string => $record->status->getIcon())
+                ->sortable()
                 ->searchable(),
             TextColumn::make('output')
                 ->limit(50)
@@ -73,6 +74,7 @@ class RunResource extends Resource
                     Task::class => 'tabler-checkbox',
                     default => null,
                 })
+                ->sortable()
                 ->searchable()
                 ->toggleable(isToggledHiddenByDefault: $showTask),
             TextColumn::make('created_at')

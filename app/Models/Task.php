@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,5 +36,10 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function getLastRunStatusAttribute(): RunStatus
+    {
+        return $this->runs()->latest()->first(['status'])->status;
     }
 }

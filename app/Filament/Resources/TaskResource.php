@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\RunStatus;
-use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
@@ -21,6 +19,7 @@ use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
@@ -72,6 +71,7 @@ class TaskResource extends Resource
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('description')
                     ->limit(40)
@@ -80,35 +80,15 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
-                    ->colors([
-                        'success' => TaskStatus::ACTIVE,
-                        'danger' => TaskStatus::DISABLED,
-                        'info' => TaskStatus::PREFLIGHT,
-                    ])
-                    ->icons([
-                        'tabler-check' => TaskStatus::ACTIVE,
-                        'tabler-x' => TaskStatus::DISABLED,
-                        'tabler-plane-departure' => TaskStatus::PREFLIGHT,
-                    ])
+                    ->color(fn (Task $record): string => $record->status->getColor())
+                    ->icon(fn (Task $record): string => $record->status->getIcon())
+                    ->sortable()
                     ->searchable(),
-                TextColumn::make('last_run_status')
-                    ->state(fn (Task $record): RunStatus => $record
-                        ->runs()
-                        ->latest()
-                        ->first(['status'])
-                        ->status
-                    )
+                TextColumn::make('lastRunStatus')
                     ->badge()
-                    ->colors([
-                        'success' => RunStatus::SUCCESSFUL,
-                        'danger' => RunStatus::FAILED,
-                        'gray' => RunStatus::RUNNING,
-                    ])
-                    ->icons([
-                        'tabler-check' => RunStatus::SUCCESSFUL,
-                        'tabler-x' => RunStatus::FAILED,
-                        'tabler-run' => RunStatus::RUNNING,
-                    ])
+                    ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
+                    ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon())
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
@@ -135,6 +115,7 @@ class TaskResource extends Resource
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
             ]);
@@ -154,29 +135,12 @@ class TaskResource extends Resource
                     ->color('gray'),
                 TextEntry::make('status')
                     ->badge()
-                    ->colors([
-                        'success' => TaskStatus::ACTIVE,
-                        'danger' => TaskStatus::DISABLED,
-                        'info' => TaskStatus::PREFLIGHT,
-                    ])
-                    ->icons([
-                        'tabler-check' => TaskStatus::ACTIVE,
-                        'tabler-x' => TaskStatus::DISABLED,
-                        'tabler-plane-departure' => TaskStatus::PREFLIGHT,
-                    ]),
-                TextEntry::make('runs.0.status')
-                    ->label('Last run status')
+                    ->color(fn (Task $record): string => $record->status->getColor())
+                    ->icon(fn (Task $record): string => $record->status->getIcon()),
+                TextEntry::make('lastRunStatus')
                     ->badge()
-                    ->colors([
-                        'success' => RunStatus::SUCCESSFUL,
-                        'danger' => RunStatus::FAILED,
-                        'gray' => RunStatus::RUNNING,
-                    ])
-                    ->icons([
-                        'tabler-check' => RunStatus::SUCCESSFUL,
-                        'tabler-x' => RunStatus::FAILED,
-                        'tabler-run' => RunStatus::RUNNING,
-                    ]),
+                    ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
+                    ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon()),
                 TextEntry::make('deleted_at')
                     ->dateTime(),
                 TextEntry::make('created_at')
