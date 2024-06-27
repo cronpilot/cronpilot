@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Task;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,6 +24,7 @@ class ParameterFactory extends Factory
         ]);
 
         return [
+            'tenant_id' => Tenant::factory(),
             'task_id' => Task::factory(),
             'name' => fake()->word(),
             'type' => $type,

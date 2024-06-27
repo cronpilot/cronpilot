@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Models\Tenant;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,20 +20,51 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Tenant::factory(3)
-            ->has(User::factory(5))
-            ->has(Server::factory(3))
-            ->has(
-                Task::factory(10)
-                    ->has(
-                        Parameter::factory(3)
-                            ->has(RunParameter::factory(), 'runs')
-                    )
-                    ->has(
-                        Run::factory(10)
-                            ->has(RunParameter::factory(), 'parameters')
-                    )
-            )
-            ->create();
+        Tenant::factory(3)->create()->each(function (Tenant $tenant): void {
+            $users = User::factory(5)->create()->each(fn (User $user) => $user->tenants()->attach($tenant));
+
+            Server::factory(5)
+                ->create(['tenant_id' => $tenant->id])
+                ->each(function (Server $server): void {
+                    Task::factory(fake()->numberBetween(5, 15))
+                        ->create(['tenant_id' => $server->tenant->id])
+                        ->each(function (Task $task): void {
+                            $parameters = Parameter::factory(fake()->numberBetween(0, 3))->create([
+                                'tenant_id' => $task->tenant->id,
+                                'task_id' => $task->id,
+                            ]);
+
+                            Run::factory(fake()->numberBetween(5, 20))
+                                ->create(function () use ($task): array {
+                                    $triggerableClass = Run::factory()->getRandomTriggerableClass();
+
+                                    $triggerable = match ($triggerableClass) {
+                                        User::class => User::whereHas(
+                                            'tenants',
+                                            fn (Builder $query): Builder => $query->where('id', $task->tenant_id)
+                                        )->inRandomOrder()->first(),
+                                        Task::class => Task::whereTenantId($task->tenant_id)->inRandomOrder()->first(),
+                                        default => null,
+                                    };
+
+                                    return [
+                                        'tenant_id' => $task->tenant_id,
+                                        'task_id' => $task->id,
+                                        'triggerable_type' => $triggerableClass,
+                                        'triggerable_id' => $triggerable?->id,
+                                    ];
+                                })
+                                ->each(function (Run $run) use ($parameters): void {
+                                    foreach ($parameters as $parameter) {
+                                        RunParameter::factory()->create([
+                                            'tenant_id' => $parameter->tenant_id,
+                                            'run_id' => $run->id,
+                                            'parameter_id' => $parameter->id,
+                                        ]);
+                                    }
+                                });
+                        });
+                });
+        });
     }
 }

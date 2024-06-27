@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\RunStatus;
 use App\Models\Task;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,9 +20,10 @@ class RunFactory extends Factory
      */
     public function definition(): array
     {
-        $triggerable = $this->triggerable();
+        $triggerable = self::getRandomTriggerableClass();
 
         return [
+            'tenant_id' => Tenant::factory(),
             'task_id' => Task::factory(),
             'status' => fake()->randomElement(RunStatus::cases()),
             'output' => fake()->sentence(),
@@ -31,10 +33,10 @@ class RunFactory extends Factory
         ];
     }
 
-    public function triggerable(): ?string
+    public static function getRandomTriggerableClass(): ?string
     {
         return fake()->randomElement([
-            // User::class,
+            User::class,
             Task::class,
             null,
         ]);

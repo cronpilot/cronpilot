@@ -1,8 +1,7 @@
 <?php
 
-use App\Models\Parameter;
-use App\Models\Run;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,13 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('run_parameters', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(Tenant::class);
-            $table->foreignIdFor(Run::class);
-            $table->foreignIdFor(Parameter::class);
-            $table->json('value');
-            $table->softDeletes();
+        Schema::create('tenant_user', function (Blueprint $table) {
+            $table->primary(['tenant_id', 'user_id']);
+            $table->foreignIdFor(Tenant::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -30,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('run_parameters');
+        Schema::dropIfExists('tenant_user');
     }
 };

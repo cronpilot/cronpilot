@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Task;
+use App\Models\Tenant;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('runs', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Tenant::class);
             $table->foreignIdFor(Task::class);
             $table->string('status');
             $table->text('output');
