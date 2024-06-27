@@ -21,13 +21,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         Tenant::factory(3)->create()->each(function (Tenant $tenant): void {
-            $users = User::factory(5)->create()->each(fn (User $user) => $user->tenants()->attach($tenant));
+            User::factory(5)->create()->each(fn (User $user) => $user->tenants()->attach($tenant));
 
             Server::factory(5)
                 ->create(['tenant_id' => $tenant->id])
                 ->each(function (Server $server): void {
                     Task::factory(fake()->numberBetween(5, 15))
-                        ->create(['tenant_id' => $server->tenant->id])
+                        ->create([
+                            'tenant_id' => $server->tenant->id,
+                            'server_id' => $server->id,
+                        ])
                         ->each(function (Task $task): void {
                             $parameters = Parameter::factory(fake()->numberBetween(0, 3))->create([
                                 'tenant_id' => $task->tenant->id,
