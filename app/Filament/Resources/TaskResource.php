@@ -31,9 +31,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TaskResource extends Resource
 {
+    public const ICON = 'tabler-checkbox';
+
     protected static ?string $model = Task::class;
 
-    protected static ?string $navigationIcon = 'tabler-checkbox';
+    protected static ?string $navigationIcon = self::ICON;
 
     public static function form(Form $form): Form
     {
@@ -83,13 +85,21 @@ class TaskResource extends Resource
                     ->color(fn (Task $record): string => $record->status->getColor())
                     ->icon(fn (Task $record): string => $record->status->getIcon())
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('lastRunStatus')
                     ->badge()
                     ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
                     ->icon(fn (Task $record): string => $record->lastRunStatus->getIcon())
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('runs_count')
+                    ->counts('runs')
+                    ->badge()
+                    ->color('warning')
+                    ->icon(RunResource::ICON)
+                    ->toggleable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

@@ -27,9 +27,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RunResource extends Resource
 {
+    public const ICON = 'tabler-run';
+
     protected static ?string $model = Run::class;
 
-    protected static ?string $navigationIcon = 'tabler-run';
+    protected static ?string $navigationIcon = self::ICON;
 
     public static function table(Table $table, bool $showTask = true): Table
     {
@@ -39,7 +41,7 @@ class RunResource extends Resource
         if ($showTask) {
             $columns->push(
                 TextColumn::make('task.name')
-                    ->icon('tabler-checkbox')
+                    ->icon(TaskResource::ICON)
                     ->sortable()
                     ->searchable(),
             );
@@ -71,7 +73,7 @@ class RunResource extends Resource
                 ->label('Triggered by')
                 ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
                     User::class => 'tabler-user',
-                    Task::class => 'tabler-checkbox',
+                    Task::class => TaskResource::ICON,
                     default => null,
                 })
                 ->sortable()
@@ -122,7 +124,7 @@ class RunResource extends Resource
         if ($showTask) {
             $schema->push(
                 TextEntry::make('task.name')
-                    ->icon('tabler-checkbox')
+                    ->icon(TaskResource::ICON)
                     ->url(fn (Run $record): string => TaskResource::getUrl('view', [
                         'record' => $record->task,
                     ])),
@@ -143,7 +145,7 @@ class RunResource extends Resource
                 ->label('Triggered by')
                 ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
                     User::class => 'tabler-user',
-                    Task::class => 'tabler-checkbox',
+                    Task::class => TaskResource::ICON,
                     default => null,
                 }),
             TextEntry::make('created_at')

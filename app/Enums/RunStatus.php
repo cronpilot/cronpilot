@@ -28,7 +28,7 @@ enum RunStatus: string implements HasLabel
     {
         return match ($this) {
             self::SUCCESSFUL => 'tabler-check',
-            self::RUNNING => 'tabler-run',
+            self::RUNNING => 'tabler-loader',
             self::FAILED => 'tabler-x',
         };
     }
