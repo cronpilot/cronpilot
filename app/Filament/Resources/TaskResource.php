@@ -91,8 +91,13 @@ class TaskResource extends Resource
                         'tabler-plane-departure' => TaskStatus::PREFLIGHT,
                     ])
                     ->searchable(),
-                TextColumn::make('runs.0.status')
-                    ->label('Last run status')
+                TextColumn::make('last_run_status')
+                    ->state(fn (Task $record): RunStatus => $record
+                        ->runs()
+                        ->latest()
+                        ->first(['status'])
+                        ->status
+                    )
                     ->badge()
                     ->colors([
                         'success' => RunStatus::SUCCESSFUL,
