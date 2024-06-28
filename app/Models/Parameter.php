@@ -12,6 +12,10 @@ class Parameter extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $casts = [
+        'options' => 'array',
+    ];
+
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);

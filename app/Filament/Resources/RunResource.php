@@ -38,75 +38,62 @@ class RunResource extends Resource
 
     public static function table(Table $table, bool $showTask = true): Table
     {
-        $columns = collect();
-        $filters = collect();
-
-        if ($showTask) {
-            $columns->push(
+        return $table
+            ->columns([
                 TextColumn::make('task.name')
                     ->icon(TaskResource::ICON)
                     ->sortable()
+                    ->searchable()
+                    ->visible($showTask),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (Run $record): string => $record->status->getColor())
+                    ->icon(fn (Run $record): string => $record->status->getIcon())
+                    ->sortable()
                     ->searchable(),
-            );
-
-            $filters->push(
+                TextColumn::make('output')
+                    ->limit(50)
+                    ->color('gray')
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('durationForHumans')
+                    ->label('Run duration')
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('triggerable.name')
+                    ->label('Triggered by')
+                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                        User::class => UserResource::ICON,
+                        Task::class => TaskResource::ICON,
+                        default => null,
+                    })
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: $showTask),
+                TextColumn::make('created_at')
+                    ->label('Start time')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
                 MultiSelectFilter::make('task')
                     ->relationship('task', 'name')
-                    ->preload(),
-            );
-        }
-
-        $columns->push(
-            TextColumn::make('status')
-                ->badge()
-                ->color(fn (Run $record): string => $record->status->getColor())
-                ->icon(fn (Run $record): string => $record->status->getIcon())
-                ->sortable()
-                ->searchable(),
-            TextColumn::make('output')
-                ->limit(50)
-                ->color('gray')
-                ->searchable()
-                ->toggleable(),
-            TextColumn::make('durationForHumans')
-                ->label('Run duration')
-                ->sortable()
-                ->toggleable(),
-            TextColumn::make('triggerable.name')
-                ->label('Triggered by')
-                ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                    User::class => UserResource::ICON,
-                    Task::class => TaskResource::ICON,
-                    default => null,
-                })
-                ->sortable()
-                ->searchable()
-                ->toggleable(isToggledHiddenByDefault: $showTask),
-            TextColumn::make('created_at')
-                ->label('Start time')
-                ->dateTime()
-                ->sortable(),
-            TextColumn::make('updated_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-            TextColumn::make('deleted_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-        );
-
-        $filters->push(
-            // MultiSelectFilter::make('triggered_by')
-            //     ->relationship('triggerable', 'name')
-            //     ->preload(),
-            TrashedFilter::make(),
-        );
-
-        return $table
-            ->columns($columns->toArray())
-            ->defaultSort('created_at', 'desc')
-            ->filters($filters->toArray())
+                    ->preload()
+                    ->visible($showTask),
+                // MultiSelectFilter::make('triggered_by')
+                //     ->relationship('triggerable', 'name')
+                //     ->preload(),
+                TrashedFilter::make(),
+            ])
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
@@ -122,52 +109,44 @@ class RunResource extends Resource
 
     public static function infolist(Infolist $infolist, bool $showTask = true): Infolist
     {
-        $schema = collect();
-
-        if ($showTask) {
-            $schema->push(
+        return $infolist
+            ->schema([
                 TextEntry::make('task.name')
                     ->icon(TaskResource::ICON)
                     ->url(fn (Run $record): string => TaskResource::getUrl('view', [
                         'record' => $record->task,
-                    ])),
-            );
-        }
-
-        $schema->push(
-            TextEntry::make('status')
-                ->badge()
-                ->color(fn (Run $record): string => $record->status->getColor())
-                ->icon(fn (Run $record): string => $record->status->getIcon()),
-            TextEntry::make('durationForHumans')
-                ->label('Run duration'),
-            TextEntry::make('output')
-                ->columnSpanFull()
-                ->color('gray'),
-            TextEntry::make('triggerable.name')
-                ->label('Triggered by')
-                ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                    User::class => UserResource::ICON,
-                    Task::class => TaskResource::ICON,
-                    default => null,
-                })
-                ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
-                    User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
-                    Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
-                    default => null,
-                }),
-            TextEntry::make('created_at')
-                ->label('Start time')
-                ->dateTime(),
-            TextEntry::make('updated_at')
-                ->dateTime(),
-            TextEntry::make('deleted_at')
-                ->dateTime()
-                ->hidden(fn (Run $record): bool => ! $record->deleted_at),
-        );
-
-        return $infolist
-            ->schema($schema->toArray());
+                    ]))
+                    ->visible($showTask),
+                TextEntry::make('status')
+                    ->badge()
+                    ->color(fn (Run $record): string => $record->status->getColor())
+                    ->icon(fn (Run $record): string => $record->status->getIcon()),
+                TextEntry::make('durationForHumans')
+                    ->label('Run duration'),
+                TextEntry::make('output')
+                    ->columnSpanFull()
+                    ->color('gray'),
+                TextEntry::make('triggerable.name')
+                    ->label('Triggered by')
+                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                        User::class => UserResource::ICON,
+                        Task::class => TaskResource::ICON,
+                        default => null,
+                    })
+                    ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
+                        User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
+                        Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
+                        default => null,
+                    }),
+                TextEntry::make('created_at')
+                    ->label('Start time')
+                    ->dateTime(),
+                TextEntry::make('updated_at')
+                    ->dateTime(),
+                TextEntry::make('deleted_at')
+                    ->dateTime()
+                    ->hidden(fn (Run $record): bool => ! $record->deleted_at),
+            ]);
     }
 
     public static function getRelations(): array
