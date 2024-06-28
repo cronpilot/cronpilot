@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\TaskResource\RelationManagers;
 
+use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\CreateAction;
@@ -39,11 +42,23 @@ class ParametersRelationManager extends RelationManager
                     ->required()
                     ->maxLength(255),
                 Textarea::make('description')
+                    ->columnspanFull()
                     ->required()
                     ->maxLength(255),
+                Toggle::make('nullable')
+                    ->live(),
                 TextInput::make('default')
+                    ->label('Default value')
+                    ->columnSpanFull()
+                    ->hidden(fn (Get $get): ?bool => $get('nullable'))
                     ->maxLength(255),
-                Toggle::make('nullable'),
+                // Builder::make('options')
+                //     ->blocks([
+                //         Block::make('option')
+                //             ->schema([
+                //                 TextInput::make('value')->required(),
+                //             ]),
+                //     ]),
             ]);
     }
 
@@ -64,6 +79,7 @@ class ParametersRelationManager extends RelationManager
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('default')
+                    ->label('Default value')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('options')
