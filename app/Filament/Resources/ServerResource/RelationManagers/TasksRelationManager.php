@@ -12,6 +12,11 @@ class TasksRelationManager extends RelationManager
 {
     protected static string $relationship = 'tasks';
 
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Form $form): Form
     {
         return TaskResource::form($form, false);
