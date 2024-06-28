@@ -19,6 +19,11 @@ class Run extends Model
         'status' => RunStatus::class,
     ];
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);

@@ -25,6 +25,8 @@ class UserResource extends Resource
 {
     public const ICON = 'tabler-user';
 
+    protected static ?string $tenantOwnershipRelationshipName = 'tenants';
+
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = self::ICON;

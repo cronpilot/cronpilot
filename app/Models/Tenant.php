@@ -12,6 +12,10 @@ class Tenant extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $fillable = [
+        'name',
+    ];
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
@@ -25,5 +29,20 @@ class Tenant extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function runs(): HasMany
+    {
+        return $this->hasMany(Run::class);
+    }
+
+    public function parameters(): HasMany
+    {
+        return $this->hasMany(Parameter::class);
+    }
+
+    public function runParameters(): HasMany
+    {
+        return $this->hasMany(RunParameter::class);
     }
 }

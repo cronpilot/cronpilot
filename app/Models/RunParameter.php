@@ -11,6 +11,11 @@ class RunParameter extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function run(): BelongsTo
     {
         return $this->belongsTo(Run::class);
