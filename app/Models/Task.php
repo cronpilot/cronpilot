@@ -14,6 +14,11 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = [
+        'id',
+        'tenant_id',
+    ];
+
     protected $casts = [
         'status' => TaskStatus::class,
     ];

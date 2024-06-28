@@ -11,6 +11,11 @@ class RunParameter extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = [
+        'id',
+        'tenant_id',
+    ];
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

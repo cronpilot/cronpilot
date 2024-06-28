@@ -15,6 +15,11 @@ class Run extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = [
+        'id',
+        'tenant_id',
+    ];
+
     protected $casts = [
         'status' => RunStatus::class,
     ];

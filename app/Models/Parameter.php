@@ -12,6 +12,11 @@ class Parameter extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = [
+        'id',
+        'tenant_id',
+    ];
+
     protected $casts = [
         'options' => 'array',
     ];

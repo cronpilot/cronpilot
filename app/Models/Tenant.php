@@ -12,8 +12,8 @@ class Tenant extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'name',
+    protected $guarded = [
+        'id',
     ];
 
     public function users(): BelongsToMany
