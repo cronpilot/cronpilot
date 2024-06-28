@@ -18,6 +18,7 @@ class TenantFactory extends Factory
     {
         return [
             'name' => fake()->company(),
+            'avatar_url' => fake()->imageUrl(500, 500),
         ];
     }
 }

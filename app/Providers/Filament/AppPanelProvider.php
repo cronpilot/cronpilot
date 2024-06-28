@@ -4,10 +4,13 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Tenancy\EditTenantProfile;
 use App\Filament\Pages\Tenancy\RegisterTenant;
+use App\Filament\Resources\UserResource;
 use App\Models\Tenant;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -31,6 +34,14 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login()
+            ->profile()
+            ->userMenuItems([
+                'profile' => MenuItem::make()->url(
+                    fn (): ?string => Filament::getTenant()
+                        ? UserResource::getUrl('view', ['record' => auth()->user()])
+                        : null
+                ),
+            ])
             ->registration()
             ->colors([
                 'primary' => Color::Purple,
