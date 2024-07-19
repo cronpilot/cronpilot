@@ -12,6 +12,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,7 +21,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Tenant::factory(3)->create()->each(function (Tenant $tenant): void {
+        $super = User::factory()->create([
+            'password' => Hash::make('test1234'),
+            'email' => 'test@test.com',
+            'name' => 'Pilot Jon',
+        ]);
+        Tenant::factory(3)->create()->each(function (Tenant $tenant) use ($super): void {
+            $super->tenants()->attach($tenant);
             User::factory(5)->create()->each(fn (User $user) => $user->tenants()->attach($tenant));
 
             Server::factory(5)
