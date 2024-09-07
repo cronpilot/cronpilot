@@ -17,7 +17,7 @@ or clients.
 
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/eastonmeth/cronpilot.git
+    git clone https://github.com/cronpilot/cronpilot.git
     cd cronpilot
     ```
 
