@@ -1,6 +1,6 @@
 # CronPilot
 
-"CronPilot: Run, Repeat Relax" is a robust service for managing repeated tasks or cron jobs. Built with Laravel using 
+"CronPilot: Run, Repeat, Relax" is a robust service for managing repeated tasks or cron jobs. Built with Laravel using 
 the Filament package, it supports multi-tenant architectures, making it ideal for companies managing multiple projects 
 or clients.
 
