@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Tenant::class);
             $table->string('name');
-            $table->string('ssh_url');
+            $table->string('hostname');
             $table->integer('ssh_port');
             $table->softDeletes();
             $table->timestamps();

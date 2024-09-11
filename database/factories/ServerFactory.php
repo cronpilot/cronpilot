@@ -20,7 +20,7 @@ class ServerFactory extends Factory
         return [
             'tenant_id' => Tenant::factory(),
             'name' => ucwords(fake()->words(3, true)),
-            'ssh_url' => fake()->url(),
+            'hostname' => (rand(0,100) < 10) ? fake()->ipv4() : fake()->domainWord() . '.' . fake()->domainWord() . '.' . fake()->domainName(),
             'ssh_port' => 22,
         ];
     }

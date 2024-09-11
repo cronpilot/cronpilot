@@ -42,8 +42,7 @@ class ServerResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('ssh_url')
-                    ->url()
+                TextInput::make('hostname')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('ssh_port')
@@ -60,8 +59,8 @@ class ServerResource extends Resource
                 TextColumn::make('name')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('ssh_url')
-                    ->label('SSH url')
+                TextColumn::make('hostname')
+                    ->label('Hostname')
                     ->limit(30)
                     ->searchable()
                     ->toggleable(),
@@ -116,9 +115,9 @@ class ServerResource extends Resource
                     ->label('SSH port')
                     ->numeric()
                     ->badge(),
-                TextEntry::make('ssh_url')
+                TextEntry::make('hostname')
                     ->columnSpanFull()
-                    ->label('SSH url'),
+                    ->label('Hostname'),
                 TextEntry::make('deleted_at')
                     ->dateTime()
                     ->hidden(fn (Server $record): bool => ! $record->deleted_at),
