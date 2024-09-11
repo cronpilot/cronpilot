@@ -22,9 +22,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $super = User::factory()->create([
-            'password' => Hash::make('test1234'),
-            'email' => 'test@test.com',
-            'name' => 'Pilot Jon',
+            'password' => Hash::make(config('auth.local_admin_user.password')),
+            'email' => config('auth.local_admin_user.email'),
+            'name' => 'Mechanic Jon',
         ]);
         Tenant::factory(3)->create()->each(function (Tenant $tenant) use ($super): void {
             $super->tenants()->attach($tenant);

@@ -39,7 +39,7 @@ class TaskResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 50;
 
     public static function form(Form $form, bool $serverSelect = true): Form
     {
