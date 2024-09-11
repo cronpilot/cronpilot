@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(Tenant::class);
             $table->string('username');
             $table->text('ssh_private_key');
+            $table->text('passphrase')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

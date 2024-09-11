@@ -33,6 +33,11 @@ class Task extends Model
         return $this->belongsTo(Server::class);
     }
 
+    public function serverCredential(): BelongsTo
+    {
+        return $this->belongsTo(ServerCredential::class);
+    }
+
     public function parameters(): HasMany
     {
         return $this->hasMany(Parameter::class);

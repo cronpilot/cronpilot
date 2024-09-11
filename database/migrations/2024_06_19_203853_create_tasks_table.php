@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Server;
+use App\Models\ServerCredential;
 use App\Models\Tenant;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,6 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Tenant::class);
             $table->foreignIdFor(Server::class)->nullable();
+            $table->foreignIdFor(ServerCredential::class)->nullable();
             $table->string('name');
             $table->text('description')->nullable();
             $table->text('status');

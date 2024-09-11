@@ -42,6 +42,9 @@ class ServerCredentialResource extends Resource
                 TextArea::make('ssh_private_key')
                     ->required()
                     ->hiddenOn(['view']),
+                TextInput::make('passphrase')
+                    ->password()
+                    ->hiddenOn(['view']),
             ]);
     }
 
@@ -57,7 +60,6 @@ class ServerCredentialResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
-                ViewAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
