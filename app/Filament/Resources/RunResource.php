@@ -34,7 +34,7 @@ class RunResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 60;
 
     public static function table(Table $table, bool $showTask = true): Table
     {

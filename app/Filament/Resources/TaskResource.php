@@ -39,7 +39,7 @@ class TaskResource extends Resource
 
     protected static ?string $navigationIcon = self::ICON;
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 50;
 
     public static function form(Form $form, bool $serverSelect = true): Form
     {
@@ -50,6 +50,9 @@ class TaskResource extends Resource
                     ->searchable()
                     ->preload()
                     ->visible($serverSelect),
+                Select::make('server_credential_id')
+                    ->relationship('serverCredential', 'username')
+                    ->searchable(),
                 TextInput::make('name')
                     ->columnSpanFull()
                     ->required()
@@ -74,6 +77,11 @@ class TaskResource extends Resource
                     ->searchable()
                     ->toggleable()
                     ->visible($showServer),
+                TextColumn::make('serverCredential.name')
+                    ->placeholder('No credential')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('name')
                     ->sortable()
                     ->searchable(),
