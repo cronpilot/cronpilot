@@ -11,6 +11,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $tenant_id
+ * @property int $task_id
+ * @property RunStatus $status
+ * @property int $duration
+ * @property string|null $output
+ */
 class Run extends Model
 {
     use HasFactory, SoftDeletes;

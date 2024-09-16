@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @method static find(array|bool|string|null $argument)
+ */
 class Task extends Model
 {
     use HasFactory, SoftDeletes;
