@@ -11,6 +11,7 @@ use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
@@ -51,11 +52,6 @@ class RunResource extends Resource
                     ->icon(fn (Run $record): string => $record->status->getIcon())
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('output')
-                    ->limit(50)
-                    ->color('gray')
-                    ->searchable()
-                    ->toggleable(),
                 TextColumn::make('durationForHumans')
                     ->label('Run duration')
                     ->sortable()
@@ -123,9 +119,10 @@ class RunResource extends Resource
                     ->icon(fn (Run $record): string => $record->status->getIcon()),
                 TextEntry::make('durationForHumans')
                     ->label('Run duration'),
-                TextEntry::make('output')
-                    ->columnSpanFull()
-                    ->color('gray'),
+                ViewEntry::make('output')
+                    ->label('Output')
+                    ->view('filament.infolists.entries.code-block')
+                    ->columnSpanFull(),
                 TextEntry::make('triggerable.name')
                     ->label('Triggered by')
                     ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
