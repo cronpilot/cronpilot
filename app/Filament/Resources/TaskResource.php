@@ -125,18 +125,6 @@ class TaskResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('server.name')
-                    ->placeholder('No server')
-                    ->icon(ServerResource::ICON)
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable()
-                    ->visible($showServer),
-                TextColumn::make('serverCredential.name')
-                    ->placeholder('No credential')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
                 TextColumn::make('name')
                     ->sortable()
                     ->searchable(),
@@ -159,11 +147,27 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
+                TextColumn::make('next_run_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
                     ->limit(30)
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('server.name')
+                    ->placeholder('No server')
+                    ->icon(ServerResource::ICON)
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible($showServer),
+                TextColumn::make('serverCredential.name')
+                    ->placeholder('No credential')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('runs_count')
                     ->counts('runs')
                     ->badge()
