@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Recurr\Rule;
 
 /**
  * @method static find(array|bool|string|null $argument)
@@ -49,6 +50,11 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function getRruleAttribute(): Rule
+    {
+        return new Rule($this->schedule);
     }
 
     public function getLastRunStatusAttribute(): RunStatus
