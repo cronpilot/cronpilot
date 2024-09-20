@@ -24,8 +24,9 @@ class DatabaseSeeder extends Seeder
         $super = User::factory()->create([
             'password' => Hash::make(config('auth.local_admin_user.password')),
             'email' => config('auth.local_admin_user.email'),
-            'name' => 'Mechanic Jon',
+            'name' => 'Pilot Jon',
         ]);
+
         Tenant::factory(3)->create()->each(function (Tenant $tenant) use ($super): void {
             $super->tenants()->attach($tenant);
             User::factory(5)->create()->each(fn (User $user) => $user->tenants()->attach($tenant));
