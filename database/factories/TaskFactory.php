@@ -24,7 +24,7 @@ class TaskFactory extends Factory
             'name' => ucwords(fake()->words(2, true)),
             'description' => fake()->sentence(),
             'status' => fake()->randomElement(TaskStatus::cases()),
-            'schedule' => '* * * * * *',
+            'schedule' => null,
             'command' => fake()->words(3, true),
         ];
     }
