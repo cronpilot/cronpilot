@@ -9,6 +9,7 @@ use App\Filament\Resources\TaskResource\Pages\ViewTask;
 use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Models\Task;
+use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Section;
@@ -34,6 +35,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Recurr\Frequency;
 use Recurr\Rule;
 
 class TaskResource extends Resource
@@ -72,7 +74,7 @@ class TaskResource extends Resource
                         Textarea::make('command')
                             ->columnSpanFull(),
                         Checkbox::make('has_schedule')
-                            ->formatStateUsing(fn (?bool $state): bool => $state ?? true)
+                            ->formatStateUsing(fn (?Task $record): bool => (bool) $record?->schedule ?? true)
                             ->live()
                             ->columnSpanFull(),
                     ]),
@@ -83,34 +85,38 @@ class TaskResource extends Resource
                     ->schema([
                         Select::make('frequency')
                             ->options([
-                                'SECONDLY' => 'Secondly',
-                                'MINUTELY' => 'Minutely',
-                                'HOURLY' => 'Hourly',
-                                'DAILY' => 'Daily',
-                                'WEEKLY' => 'Weekly',
-                                'MONTHLY' => 'Monthly',
-                                'YEARLY' => 'Yearly',
+                                Frequency::SECONDLY => 'Secondly',
+                                Frequency::MINUTELY => 'Minutely',
+                                Frequency::HOURLY => 'Hourly',
+                                Frequency::DAILY => 'Daily',
+                                Frequency::WEEKLY => 'Weekly',
+                                Frequency::MONTHLY => 'Monthly',
+                                Frequency::YEARLY => 'Yearly',
                             ])
-                            ->formatStateUsing(fn (?string $state): string => $state ?? 'DAILY')
+                            ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
                             ->required()
                             ->live()
                             ->native(false),
                         TextInput::make('interval')
                             ->prefix('Every')
-                            ->suffix(fn (Get $get): string => match ($get('frequency')) {
-                                'SECONDLY' => 'second',
-                                'MINUTELY' => 'minute',
-                                'HOURLY' => 'hour',
-                                'DAILY' => 'day',
-                                'WEEKLY' => 'week',
-                                'MONTHLY' => 'month',
-                                'YEARLY' => 'year',
+                            ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
+                                Frequency::SECONDLY => 'second',
+                                Frequency::MINUTELY => 'minute',
+                                Frequency::HOURLY => 'hour',
+                                Frequency::DAILY => 'day',
+                                Frequency::WEEKLY => 'week',
+                                Frequency::MONTHLY => 'month',
+                                Frequency::YEARLY => 'year',
                             }.'(s)')
                             ->integer()
-                            ->formatStateUsing(fn (?int $state): int => $state ?? 1)
+                            ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
-                        DateTimePicker::make('start_date'),
-                        DateTimePicker::make('end_date'),
+                        DateTimePicker::make('start_date')
+                            ->native(false)
+                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->startDate),
+                        DateTimePicker::make('end_date')
+                            ->native(false)
+                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
                     ]),
             ]);
     }
@@ -263,20 +269,19 @@ class TaskResource extends Resource
 
     public static function mutateFormData(array $data): array
     {
-        if ($data['has_schedule']) {
-            $data['schedule'] = self::getSchedule($data);
-        }
+        $data['schedule'] = $data['has_schedule']
+            ? self::getSchedule($data)->getString()
+            : null;
 
         return $data;
     }
 
-    private static function getSchedule(array $data): string
+    private static function getSchedule(array $data): Rule
     {
         return (new Rule)
-            ->setFreq($data['frequency'])
+            ->setFreq((int) $data['frequency'])
             ->setInterval($data['interval'])
             ->setStartDate($data['start_date'])
-            ->setEndDate($data['end_date'])
-            ->getString();
+            ->setEndDate($data['end_date']);
     }
 }

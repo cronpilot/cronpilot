@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
+use Carbon\Carbon;
+use Error;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,13 +70,45 @@ class Task extends Model
             return null;
         }
 
-        $translatedRrule = (new TextTransformer())->transform($this->rrule);
+        try {
+            $translatedRrule = (new TextTransformer())->transform($this->rrule);
+        } catch (Error $e) {
+            return 'Custom';
+        }
 
         if ($translatedRrule === 'Unable to fully convert this rrule to text.') {
             return 'Custom';
         }
 
         return ucfirst($translatedRrule);
+    }
+
+    public function getFrequencyAttribute(): null|int|string
+    {
+        return $this->rrule?->getFreq();
+    }
+
+    public function getIntervalAttribute(): ?string
+    {
+        return $this->rrule?->getInterval();
+    }
+
+    public function getStartDateAttribute(): ?Carbon
+    {
+        if (! $this->rrule?->getStartDate()) {
+            return null;
+        }
+
+        return new Carbon($this->rrule->getStartDate());
+    }
+
+    public function getEndDateAttribute(): ?Carbon
+    {
+        if (! $this->rrule?->getEndDate()) {
+            return null;
+        }
+
+        return new Carbon($this->rrule->getEndDate());
     }
 
     public function getLastRunStatusAttribute(): RunStatus
