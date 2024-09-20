@@ -104,12 +104,17 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
+                TextColumn::make('scheduleForHumans')
+                    ->label('Schedule')
+                    ->limit(30)
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('runs_count')
                     ->counts('runs')
                     ->badge()
                     ->color('warning')
                     ->icon(RunResource::ICON)
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
@@ -158,6 +163,8 @@ class TaskResource extends Resource
                         : null
                     )
                     ->visible($showServer),
+                TextEntry::make('scheduleForHumans')
+                    ->label('Schedule'),
                 TextEntry::make('description')
                     ->columnSpanFull()
                     ->color('gray'),

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Recurr\Rule;
+use Recurr\Transformer\TextTransformer;
 
 /**
  * @method static find(array|bool|string|null $argument)
@@ -52,9 +53,28 @@ class Task extends Model
         return $this->hasMany(Run::class);
     }
 
-    public function getRruleAttribute(): Rule
+    public function getRruleAttribute(): ?Rule
     {
+        if (! $this->schedule) {
+            return null;
+        }
+
         return new Rule($this->schedule);
+    }
+
+    public function getScheduleForHumansAttribute(): ?string
+    {
+        if (! $this->rrule) {
+            return null;
+        }
+
+        $translatedRrule = (new TextTransformer())->transform($this->rrule);
+
+        if ($translatedRrule === 'Unable to fully convert this rrule to text.') {
+            return 'Custom';
+        }
+
+        return ucfirst($translatedRrule);
     }
 
     public function getLastRunStatusAttribute(): RunStatus
