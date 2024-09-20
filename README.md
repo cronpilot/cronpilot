@@ -71,6 +71,16 @@ credentials. You can then start creating and managing tasks (cron jobs) through 
 3. Fill in the tenant details, including the name and domain.
 4. Save the tenant.
 
+### Running The Scheduler in Development Without Cron
+You can run the scheduler in development without using cron by running the following command:
+```bash
+php artisan schedule:run
+```
+
+or if you want to keep the scheduler running, you can use the following command:
+```bash
+php artisan schedule:work
+```
 ## Contributing
 
 Contributions are welcome! Please follow these steps to contribute:
