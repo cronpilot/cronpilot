@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\TaskResource\Pages;
 
+use App\Actions\RunTask;
 use App\Filament\Resources\TaskResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Artisan;
 
 class ViewTask extends ViewRecord
 {
@@ -23,9 +23,9 @@ class ViewTask extends ViewRecord
             Action::make('run')
                 ->color('success')
                 ->requiresConfirmation()
-                ->action(function () {
-                    Artisan::call('app:do-server-stuff');
-                })
+                ->action(function (RunTask $runTask) {
+                    $runTask->handle($this->record->id);
+                }),
         ];
     }
 }
