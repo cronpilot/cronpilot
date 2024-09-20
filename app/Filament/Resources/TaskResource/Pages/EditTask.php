@@ -22,4 +22,9 @@ class EditTask extends EditRecord
             RestoreAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return TaskResource::mutateFormData($data);
+    }
 }

@@ -9,10 +9,14 @@ use App\Filament\Resources\TaskResource\Pages\ViewTask;
 use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Models\Task;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -30,6 +34,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Recurr\Rule;
 
 class TaskResource extends Resource
 {
@@ -45,24 +50,68 @@ class TaskResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('server_id')
-                    ->relationship('server', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->visible($serverSelect),
-                Select::make('server_credential_id')
-                    ->relationship('serverCredential', 'username')
-                    ->searchable(),
-                TextInput::make('name')
-                    ->columnSpanFull()
-                    ->required()
-                    ->maxLength(255),
-                Textarea::make('description')
-                    ->columnSpanFull(),
-                Textarea::make('schedule')
-                    ->columnSpanFull(),
-                Textarea::make('command')
-                    ->columnSpanFull(),
+                Section::make('Task Information')
+                    ->icon('tabler-info-hexagon')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('server_id')
+                            ->relationship('server', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->visible($serverSelect),
+                        Select::make('server_credential_id')
+                            ->relationship('serverCredential', 'username')
+                            ->preload()
+                            ->searchable(),
+                        TextInput::make('name')
+                            ->columnSpanFull()
+                            ->required()
+                            ->maxLength(255),
+                        Textarea::make('description')
+                            ->columnSpanFull(),
+                        Textarea::make('command')
+                            ->columnSpanFull(),
+                        Checkbox::make('has_schedule')
+                            ->formatStateUsing(fn (?bool $state): bool => $state ?? true)
+                            ->live()
+                            ->columnSpanFull(),
+                    ]),
+                Section::make('Schedule')
+                    ->icon('tabler-clock')
+                    ->columns(2)
+                    ->visible(fn (Get $get): bool => $get('has_schedule'))
+                    ->schema([
+                        Select::make('frequency')
+                            ->options([
+                                'SECONDLY' => 'Secondly',
+                                'MINUTELY' => 'Minutely',
+                                'HOURLY' => 'Hourly',
+                                'DAILY' => 'Daily',
+                                'WEEKLY' => 'Weekly',
+                                'MONTHLY' => 'Monthly',
+                                'YEARLY' => 'Yearly',
+                            ])
+                            ->formatStateUsing(fn (?string $state): string => $state ?? 'DAILY')
+                            ->required()
+                            ->live()
+                            ->native(false),
+                        TextInput::make('interval')
+                            ->prefix('Every')
+                            ->suffix(fn (Get $get): string => match ($get('frequency')) {
+                                'SECONDLY' => 'second',
+                                'MINUTELY' => 'minute',
+                                'HOURLY' => 'hour',
+                                'DAILY' => 'day',
+                                'WEEKLY' => 'week',
+                                'MONTHLY' => 'month',
+                                'YEARLY' => 'year',
+                            }.'(s)')
+                            ->integer()
+                            ->formatStateUsing(fn (?int $state): int => $state ?? 1)
+                            ->required(),
+                        DateTimePicker::make('start_date'),
+                        DateTimePicker::make('end_date'),
+                    ]),
             ]);
     }
 
@@ -210,5 +259,24 @@ class TaskResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function mutateFormData(array $data): array
+    {
+        if ($data['has_schedule']) {
+            $data['schedule'] = self::getSchedule($data);
+        }
+
+        return $data;
+    }
+
+    private static function getSchedule(array $data): string
+    {
+        return (new Rule)
+            ->setFreq($data['frequency'])
+            ->setInterval($data['interval'])
+            ->setStartDate($data['start_date'])
+            ->setEndDate($data['end_date'])
+            ->getString();
     }
 }
