@@ -48,5 +48,9 @@ class RunTask
         $run->output = $output;
         $run->status = RunStatus::SUCCESSFUL;
         $run->save();
+
+        // @todo: this is just fake for now. Implement properly once we have the rrules figured out
+        $task->scheduleNextRun(now());
+        $task->save();
     }
 }

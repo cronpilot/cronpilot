@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
+use App\Helpers\Recurrence;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Error;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,9 +15,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Recurr\Rule;
 use Recurr\Transformer\TextTransformer;
+use Throwable;
 
 /**
  * @method static find(array|bool|string|null $argument)
+ * @property Rule $rrule
  */
 class Task extends Model
 {
@@ -114,5 +118,35 @@ class Task extends Model
     public function getLastRunStatusAttribute(): RunStatus
     {
         return $this->runs()->latest()->first(['status'])->status;
+    }
+
+    public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
+    {
+        $nextOccurrenceTime = $this->calculateNextOccurrenceAfterDate($lastOccurrenceTime);
+
+        if (! $nextOccurrenceTime) {
+            // @todo: have better logic to figure out what to do here
+            $this->status = TaskStatus::DISABLED;
+            $this->next_run_at = null;
+
+            return;
+        }
+
+        $this->next_run_at = $nextOccurrenceTime;
+    }
+
+    private function createRecurrence(): null|Recurrence
+    {
+        try {
+            return new Recurrence($this->schedule, null);
+        } catch (Throwable $e) {
+            // @todo: should we be suppressing here?
+            return null;
+        }
+    }
+
+    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): null|CarbonInterface
+    {
+        return $this->createRecurrence()?->next($time);
     }
 }
