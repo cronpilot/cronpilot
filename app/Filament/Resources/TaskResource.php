@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
@@ -56,6 +57,11 @@ class TaskResource extends Resource
                     ->icon('tabler-info-hexagon')
                     ->columns(2)
                     ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
+                        Select::make('status')
+                            ->options(TaskStatus::class),
                         Select::make('server_id')
                             ->relationship('server', 'name')
                             ->searchable()
@@ -65,10 +71,6 @@ class TaskResource extends Resource
                             ->relationship('serverCredential', 'username')
                             ->preload()
                             ->searchable(),
-                        TextInput::make('name')
-                            ->columnSpanFull()
-                            ->required()
-                            ->maxLength(255),
                         Textarea::make('description')
                             ->columnSpanFull(),
                         Textarea::make('command')
@@ -81,7 +83,7 @@ class TaskResource extends Resource
                 Section::make('Schedule')
                     ->icon('tabler-clock')
                     ->columns(2)
-                    ->visible(fn (Get $get): bool => $get('has_schedule'))
+                    ->visible(fn (Get $get): bool => (bool) $get('has_schedule'))
                     ->schema([
                         Select::make('frequency')
                             ->options([
@@ -214,6 +216,13 @@ class TaskResource extends Resource
         return $infolist
             ->schema([
                 TextEntry::make('name'),
+                TextEntry::make('status')
+                    ->badge()
+                    ->color(fn (Task $record): string => $record->status->getColor())
+                    ->icon(fn (Task $record): string => $record->status->getIcon()),
+                TextEntry::make('description')
+                    ->columnSpanFull()
+                    ->color('gray'),
                 TextEntry::make('server.name')
                     ->placeholder('No server')
                     ->icon(ServerResource::ICON)
@@ -222,15 +231,13 @@ class TaskResource extends Resource
                         : null
                     )
                     ->visible($showServer),
+                TextEntry::make('serverCredential.username')
+                    ->label('Credential')
+                    ->placeholder('No credential')
+                    ->icon(ServerCredentialResource::ICON)
+                    ->visible($showServer),
                 TextEntry::make('scheduleForHumans')
                     ->label('Schedule'),
-                TextEntry::make('description')
-                    ->columnSpanFull()
-                    ->color('gray'),
-                TextEntry::make('status')
-                    ->badge()
-                    ->color(fn (Task $record): string => $record->status->getColor())
-                    ->icon(fn (Task $record): string => $record->status->getIcon()),
                 TextEntry::make('lastRunStatus')
                     ->badge()
                     ->color(fn (Task $record): string => $record->lastRunStatus->getColor())
@@ -242,14 +249,16 @@ class TaskResource extends Resource
                     ->dateTime(),
                 TextEntry::make('updated_at')
                     ->dateTime(),
+                TextEntry::make('next_run_at')
+                    ->dateTime(),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            ParametersRelationManager::class,
             RunsRelationManager::class,
+            ParametersRelationManager::class,
         ];
     }
 
