@@ -34,6 +34,16 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('')
+            ->brandLogo(
+                fn (): string => request()->routeIs('filament.app.auth.login')
+                    ? asset('images/cronpilot-logo-with-bg.svg')
+                    : asset('images/airplane-with-bg.svg')
+            )
+            ->brandLogoHeight(
+                fn (): string => request()->routeIs('filament.app.auth.login')
+                    ? '8rem'
+                    : '3rem'
+            )
             ->login(Login::class)
             ->profile()
             ->userMenuItems([
