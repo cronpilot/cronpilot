@@ -3,28 +3,21 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServerCredentialResource\Pages;
-use App\Filament\Resources\ServerCredentialResource\RelationManagers;
 use App\Models\ServerCredential;
-use Filament\Forms;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ServerCredentialResource extends Resource
 {
-    public const ICON = 'heroicon-o-rectangle-stack';
+    public const ICON = 'tabler-id-badge-2';
 
     protected static ?string $model = ServerCredential::class;
 
