@@ -44,6 +44,7 @@ class AppPanelProvider extends PanelProvider
                     ? '8rem'
                     : '3rem'
             )
+            ->favicon(asset('images/favicon.png'))
             ->login(Login::class)
             ->profile()
             ->userMenuItems([
