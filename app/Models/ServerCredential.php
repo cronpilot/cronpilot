@@ -16,6 +16,14 @@ class ServerCredential extends Model
         'tenant_id',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'ssh_private_key' => 'encrypted',
+            'passphrase' => 'encrypted',
+        ];
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
