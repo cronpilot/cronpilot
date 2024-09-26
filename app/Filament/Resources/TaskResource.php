@@ -12,12 +12,13 @@ use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManag
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Models\Task;
 use Carbon\Carbon;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Infolists\Components\TextEntry;
@@ -77,7 +78,7 @@ class TaskResource extends Resource
                             ->columnSpanFull(),
                         Textarea::make('command')
                             ->columnSpanFull(),
-                        Checkbox::make('has_schedule')
+                        Toggle::make('has_schedule')
                             ->formatStateUsing(fn (?Task $record): bool => (bool) $record?->schedule ?? true)
                             ->live()
                             ->columnSpanFull(),
@@ -115,6 +116,33 @@ class TaskResource extends Resource
                             ->integer()
                             ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
+                        Radio::make('weekly_options')
+                            ->hiddenLabel()
+                            ->options([
+                                'from_start_date' => 'From start date',
+                                'by_day' => 'By day',
+                            ])
+                            ->default('from_start_date')
+                            ->formatStateUsing(fn (?Task $record): string => $record?->byDay ? 'by_day' : 'from_start_date')
+                            ->columnSpanFull()
+                            ->live()
+                            ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY),
+                        Select::make('by_day')
+                            ->multiple()
+                            ->label('Days')
+                            ->options([
+                                'SU' => 'Sunday',
+                                'MO' => 'Monday',
+                                'TU' => 'Tuesday',
+                                'WE' => 'Wednesday',
+                                'TH' => 'Thursday',
+                                'FR' => 'Friday',
+                                'SA' => 'Saturday',
+                            ])
+                            ->required()
+                            ->formatStateUsing(fn (?Task $record): ?array => $record?->byDay)
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY && $get('weekly_options') === 'by_day'),
                         DateTimePicker::make('start_date')
                             ->native(false)
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->startDate),
@@ -292,18 +320,24 @@ class TaskResource extends Resource
     public static function mutateFormData(array $data): array
     {
         $data['schedule'] = $data['has_schedule']
-            ? self::getSchedule($data)->getString()
+            ? self::getSchedule($data)
             : null;
 
         return $data;
     }
 
-    private static function getSchedule(array $data): Rule
+    private static function getSchedule(array $data): string
     {
-        return (new Rule)
+        $rrule = (new Rule)
             ->setFreq((int) $data['frequency'])
             ->setInterval($data['interval'])
             ->setStartDate($data['start_date'])
             ->setEndDate($data['end_date']);
+
+        if ($data['frequency'] == Frequency::WEEKLY && $data['weekly_options'] === 'by_day') {
+            $rrule->setByDay($data['by_day']);
+        }
+
+        return $rrule->getString();
     }
 }
