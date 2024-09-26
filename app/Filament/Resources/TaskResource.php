@@ -72,7 +72,7 @@ class TaskResource extends Resource
                             ->preload()
                             ->visible($serverSelect),
                         Select::make('server_credential_id')
-                            ->relationship('serverCredential', 'username')
+                            ->relationship('serverCredential', 'title')
                             ->preload()
                             ->searchable(),
                         Textarea::make('description')
