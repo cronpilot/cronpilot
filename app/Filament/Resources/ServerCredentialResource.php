@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ServerCredentialResource\Pages;
+use App\Filament\Resources\ServerCredentialResource\Pages\CreateServerCredential;
+use App\Filament\Resources\ServerCredentialResource\Pages\ListServerCredentials;
 use App\Models\ServerCredential;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -78,8 +79,8 @@ class ServerCredentialResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListServerCredentials::route('/'),
-            'create' => Pages\CreateServerCredential::route('/create'),
+            'index' => ListServerCredentials::route('/'),
+            'create' => CreateServerCredential::route('/create'),
         ];
     }
 }
