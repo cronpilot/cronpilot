@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServerCredentialResource\Pages;
 use App\Models\ServerCredential;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -29,15 +30,17 @@ class ServerCredentialResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('username')
-                    ->required()
-                    ->maxLength(255),
+                Section::make('Server Credential')
+                    ->icon('tabler-info-hexagon')
+            ->schema([ TextInput::make('username')
+                ->required()
+                ->maxLength(255),
                 TextArea::make('ssh_private_key')
                     ->required()
                     ->hiddenOn(['view']),
                 TextInput::make('passphrase')
                     ->password()
-                    ->hiddenOn(['view']),
+                    ->hiddenOn(['view'])]),
             ]);
     }
 

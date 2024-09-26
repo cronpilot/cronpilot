@@ -10,6 +10,7 @@ use App\Filament\Resources\RunResource\RelationManagers\ParametersRelationManage
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
+use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Infolists\Infolist;
@@ -21,7 +22,7 @@ use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\MultiSelectFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -81,10 +82,11 @@ class RunResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                MultiSelectFilter::make('task')
+                SelectFilter::make('task')
                     ->relationship('task', 'name')
                     ->preload()
-                    ->visible($showTask),
+                    ->visible($showTask)
+                    ->multiple(),
                 // MultiSelectFilter::make('triggered_by')
                 //     ->relationship('triggerable', 'name')
                 //     ->preload(),
@@ -107,42 +109,46 @@ class RunResource extends Resource
     {
         return $infolist
             ->schema([
-                TextEntry::make('task.name')
+                Section::make('Runs')
+                    ->icon('tabler-info-hexagon')
+                    ->columns(3)
+                ->schema([TextEntry::make('task.name')
                     ->icon(TaskResource::ICON)
                     ->url(fn (Run $record): string => TaskResource::getUrl('view', [
                         'record' => $record->task,
                     ]))
                     ->visible($showTask),
-                TextEntry::make('status')
-                    ->badge()
-                    ->color(fn (Run $record): string => $record->status->getColor())
-                    ->icon(fn (Run $record): string => $record->status->getIcon()),
-                TextEntry::make('durationForHumans')
-                    ->label('Run duration'),
-                ViewEntry::make('output')
-                    ->label('Output')
-                    ->view('filament.infolists.entries.code-block')
-                    ->columnSpanFull(),
-                TextEntry::make('triggerable.name')
-                    ->label('Triggered by')
-                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
-                        User::class => UserResource::ICON,
-                        Task::class => TaskResource::ICON,
-                        default => null,
-                    })
-                    ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
-                        User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
-                        Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
-                        default => null,
-                    }),
-                TextEntry::make('created_at')
-                    ->label('Start time')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->hidden(fn (Run $record): bool => ! $record->deleted_at),
+                    TextEntry::make('status')
+                        ->badge()
+                        ->color(fn (Run $record): string => $record->status->getColor())
+                        ->icon(fn (Run $record): string => $record->status->getIcon()),
+                    TextEntry::make('durationForHumans')
+                        ->label('Run duration'),
+                    ViewEntry::make('output')
+                        ->label('Output')
+                        ->view('filament.infolists.entries.code-block')
+                        ->columnSpanFull(),
+                    TextEntry::make('triggerable.name')
+                        ->label('Triggered by')
+                        ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
+                            User::class => UserResource::ICON,
+                            Task::class => TaskResource::ICON,
+                            default => null,
+                        })
+                        ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
+                            User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
+                            Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
+                            default => null,
+                        }),
+                    TextEntry::make('created_at')
+                        ->label('Start time')
+                        ->dateTime(),
+                    TextEntry::make('updated_at')
+                        ->dateTime(),
+                    TextEntry::make('deleted_at')
+                        ->dateTime()
+                        ->hidden(fn (Run $record): bool => ! $record->deleted_at),])
+
             ]);
     }
 

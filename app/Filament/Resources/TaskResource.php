@@ -31,7 +31,7 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\MultiSelectFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -190,9 +190,10 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                MultiSelectFilter::make('server')
+                SelectFilter::make('server')
                     ->relationship('server', 'name')
                     ->preload()
+                    ->multiple()
                     ->visible($showServer),
                 TrashedFilter::make(),
             ])
