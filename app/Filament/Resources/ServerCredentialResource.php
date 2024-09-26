@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServerCredentialResource\Pages\CreateServerCredential;
+use App\Filament\Resources\ServerCredentialResource\Pages\EditServerCredential;
 use App\Filament\Resources\ServerCredentialResource\Pages\ListServerCredentials;
 use App\Models\ServerCredential;
 use Filament\Forms\Components\Textarea;
@@ -12,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -38,10 +40,10 @@ class ServerCredentialResource extends Resource
                     ->maxLength(255),
                 TextArea::make('ssh_private_key')
                     ->required()
-                    ->hiddenOn(['view']),
+                    ->hiddenOn(['view', 'edit']),
                 TextInput::make('passphrase')
                     ->password()
-                    ->hiddenOn(['view']),
+                    ->hiddenOn(['view', 'edit']),
             ]);
     }
 
@@ -60,6 +62,7 @@ class ServerCredentialResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+                EditAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
@@ -81,6 +84,7 @@ class ServerCredentialResource extends Resource
         return [
             'index' => ListServerCredentials::route('/'),
             'create' => CreateServerCredential::route('/create'),
+            'edit' => EditServerCredential::route('/{record}/edit'),
         ];
     }
 }
