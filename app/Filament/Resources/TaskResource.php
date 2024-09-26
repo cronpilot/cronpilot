@@ -165,7 +165,7 @@ class TaskResource extends Resource
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible($showServer),
-                TextColumn::make('serverCredential.name')
+                TextColumn::make('serverCredential.title')
                     ->placeholder('No credential')
                     ->sortable()
                     ->searchable()
