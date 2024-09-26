@@ -29,6 +29,9 @@ class ServerCredentialResource extends Resource
     {
         return $form
             ->schema([
+                TextInput::make('title')
+                    ->required()
+                    ->maxLength(255),
                 TextInput::make('username')
                     ->required()
                     ->maxLength(255),
@@ -45,6 +48,9 @@ class ServerCredentialResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('title')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('username')
                     ->sortable()
                     ->searchable(),
