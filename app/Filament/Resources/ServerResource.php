@@ -43,7 +43,6 @@ class ServerResource extends Resource
     }
 
 
-
     public static function table(Table $table): Table
     {
         return $table
@@ -104,27 +103,28 @@ class ServerResource extends Resource
             ->schema(self::getServerInfoList());
     }
 
-    private static function getServerInfoList():array
+    private static function getServerInfoList(): array
     {
         return [
             Section::make('Server Information')
                 ->columns(2)
-            ->schema([TextEntry::make('name'),
-                TextEntry::make('ssh_port')
-                    ->label('SSH port')
-                    ->numeric()
-                    ->badge(),
-                TextEntry::make('hostname')
-                    ->columnSpanFull()
-                    ->label('Hostname'),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->hidden(fn (Server $record): bool => ! $record->deleted_at),
-                TextEntry::make('created_at')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),])
-
+                ->schema([
+                    TextEntry::make('name'),
+                    TextEntry::make('ssh_port')
+                        ->label('SSH port')
+                        ->numeric()
+                        ->badge(),
+                    TextEntry::make('hostname')
+                        ->columnSpanFull()
+                        ->label('Hostname'),
+                    TextEntry::make('deleted_at')
+                        ->dateTime()
+                        ->hidden(fn(Server $record): bool => ! $record->deleted_at),
+                    TextEntry::make('created_at')
+                        ->dateTime(),
+                    TextEntry::make('updated_at')
+                        ->dateTime(),
+                ]),
         ];
     }
 
