@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Actions\RunTask;
 use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
@@ -23,6 +24,7 @@ use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -195,6 +197,13 @@ class TaskResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+                Action::make('run')
+                    ->color('success')
+                    ->icon('tabler-player-play-filled')
+                    ->requiresConfirmation()
+                    ->action(function (Task $record, RunTask $runTask): void {
+                        $runTask->handle($record->id);
+                    }),
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
