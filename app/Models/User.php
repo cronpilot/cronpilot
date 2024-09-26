@@ -80,37 +80,37 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->tenants()->whereKey($tenant)->exists();
     }
 
-    public static function getForm():array
+    public static function getForm(): array
     {
-      return  [
-          Section::make('Users')
-          ->description('Information about users')
-              ->icon('heroicon-o-users')
-          ->schema([
-              TextInput::make('name')
-                  ->required()
-                  ->maxLength(255),
-              TextInput::make('email')
-                  ->email()
-                  ->required()
-                  ->maxLength(255),
-              DateTimePicker::make('email_verified_at')
-              ->native(false)
-              ->closeOnDateSelection(),
-              TextInput::make('password')
-                  ->password()
-                  ->dehydrateStateUsing(fn (?string $state): string => Hash::make($state))
-                  ->dehydrated(fn (?string $state): bool => filled($state))
-                  ->required(fn (string $context): bool => $context === 'create')
-                  ->maxLength(255),
-              FileUpload::make('avatar_url')
-                  ->label('Avatar')
-                  ->columnSpanFull()
-                  ->avatar()
-                  ->directory('avatars')
-                  ->imageEditor()
-                  ->maxSize(1024 * 1024 * 10),
-          ])->columns(2)
+        return [
+            Section::make('Users')
+                ->description('Information about users')
+                ->icon('heroicon-o-users')
+                ->schema([
+                    FileUpload::make('avatar_url')
+                        ->label('Avatar')
+                        ->columnSpanFull()
+                        ->avatar()
+                        ->directory('avatars')
+                        ->imageEditor()
+                        ->maxSize(1024 * 1024 * 10),
+                    TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('email')
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
+                    DateTimePicker::make('email_verified_at')
+                        ->native(false)
+                        ->closeOnDateSelection(),
+                    TextInput::make('password')
+                        ->password()
+                        ->dehydrateStateUsing(fn(?string $state): string => Hash::make($state))
+                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->required(fn(string $context): bool => $context === 'create')
+                        ->maxLength(255),
+                ])->columns(2),
         ];
     }
 }
