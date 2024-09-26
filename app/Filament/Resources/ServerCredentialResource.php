@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ServerCredentialResource\Pages;
+use App\Filament\Resources\ServerCredentialResource\Pages\CreateServerCredential;
+use App\Filament\Resources\ServerCredentialResource\Pages\EditServerCredential;
+use App\Filament\Resources\ServerCredentialResource\Pages\ListServerCredentials;
 use App\Models\ServerCredential;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
@@ -12,9 +14,11 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Route;
 
 class ServerCredentialResource extends Resource
 {
@@ -28,19 +32,27 @@ class ServerCredentialResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $schema = [
+            TextInput::make('title')
+                ->required()
+                ->maxLength(255),
+            TextInput::make('username')
+                ->required()
+                ->maxLength(255),
+        ];
+
+        if ($form->getOperation() === 'create') {
+            $schema[] = TextArea::make('ssh_private_key')
+                ->required();
+            $schema[] = TextInput::make('passphrase')
+                ->password();
+        }
+
         return $form
             ->schema([
                 Section::make('Server Credential')
                     ->icon('tabler-info-hexagon')
-            ->schema([ TextInput::make('username')
-                ->required()
-                ->maxLength(255),
-                TextArea::make('ssh_private_key')
-                    ->required()
-                    ->hiddenOn(['view']),
-                TextInput::make('passphrase')
-                    ->password()
-                    ->hiddenOn(['view'])]),
+                    ->schema($schema);
             ]);
     }
 
@@ -48,6 +60,9 @@ class ServerCredentialResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('title')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('username')
                     ->sortable()
                     ->searchable(),
@@ -56,6 +71,7 @@ class ServerCredentialResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+                EditAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
@@ -75,8 +91,9 @@ class ServerCredentialResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListServerCredentials::route('/'),
-            'create' => Pages\CreateServerCredential::route('/create'),
+            'index' => ListServerCredentials::route('/'),
+            'create' => CreateServerCredential::route('/create'),
+            'edit' => EditServerCredential::route('/{record}/edit'),
         ];
     }
 }

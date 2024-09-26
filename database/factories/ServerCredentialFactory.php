@@ -17,7 +17,9 @@ class ServerCredentialFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'title' => fake()->word(),
+            'username' => fake()->userName(),
+            'ssh_private_key' => fake()->regexify('[A-Za-z0-9]{256}'),
         ];
     }
 }
