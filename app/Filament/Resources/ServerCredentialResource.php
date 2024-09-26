@@ -40,7 +40,7 @@ class ServerCredentialResource extends Resource
                 ->maxLength(255),
         ];
 
-        if (Route::currentRouteName() === CreateServerCredential::getRouteName()) {
+        if ($form->getOperation() === 'create') {
             $schema[] = TextArea::make('ssh_private_key')
                 ->required();
             $schema[] = TextInput::make('passphrase')
