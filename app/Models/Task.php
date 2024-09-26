@@ -7,7 +7,6 @@ use App\Enums\TaskStatus;
 use App\Helpers\Recurrence;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use Error;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -77,7 +76,7 @@ class Task extends Model
 
         try {
             $translatedRrule = (new TextTransformer)->transform($this->rrule);
-        } catch (Error $e) {
+        } catch (Throwable $e) {
             return 'Custom';
         }
 
@@ -101,6 +100,11 @@ class Task extends Model
     public function getByDayAttribute(): ?array
     {
         return $this->rrule?->getByDay();
+    }
+
+    public function getByMonthDayAttribute(): ?array
+    {
+        return $this->rrule?->getByMonthDay();
     }
 
     public function getStartDateAttribute(): ?Carbon

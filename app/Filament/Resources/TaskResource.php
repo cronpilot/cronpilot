@@ -11,9 +11,11 @@ use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\Pages\ViewTask;
 use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
+use App\Helpers\Recurrence;
 use App\Models\Task;
 use Carbon\Carbon;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -40,6 +42,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 use Recurr\Frequency;
 use Recurr\Rule;
 
@@ -88,6 +91,7 @@ class TaskResource extends Resource
                     ->icon('tabler-clock')
                     ->columns(2)
                     ->visible(fn (Get $get): bool => (bool) $get('has_schedule'))
+                    ->live()
                     ->schema([
                         Select::make('frequency')
                             ->options([
@@ -101,7 +105,6 @@ class TaskResource extends Resource
                             ])
                             ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
                             ->required()
-                            ->live()
                             ->native(false),
                         TextInput::make('interval')
                             ->prefix('Every')
@@ -124,10 +127,27 @@ class TaskResource extends Resource
                                 'by_day' => 'By day',
                             ])
                             ->default('from_start_date')
-                            ->formatStateUsing(fn (?Task $record): string => $record?->byDay ? 'by_day' : 'from_start_date')
+                            ->formatStateUsing(fn (?Task $record): string => match (true) {
+                                (bool) $record?->byDay => 'by_day',
+                                default => 'from_start_date',
+                            })
                             ->columnSpanFull()
-                            ->live()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY),
+                        Radio::make('monthly_options')
+                            ->hiddenLabel()
+                            ->options([
+                                'from_start_date' => 'From start date',
+                                'by_month_day' => 'By day of the month',
+                                'by_day' => 'By specific weekday',
+                            ])
+                            ->default('from_start_date')
+                            ->formatStateUsing(fn (?Task $record): string => match (true) {
+                                (bool) $record?->byDay => 'by_day',
+                                (bool) $record?->byMonthDay => 'by_month_day',
+                                default => 'from_start_date',
+                            })
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY),
                         Select::make('by_day')
                             ->multiple()
                             ->label('Days')
@@ -136,12 +156,26 @@ class TaskResource extends Resource
                             ->formatStateUsing(fn (?Task $record): ?array => $record?->byDay)
                             ->columnSpanFull()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY && $get('weekly_options') === 'by_day'),
+                        Select::make('by_month_day')
+                            ->multiple()
+                            ->label('Days')
+                            ->options(range(1, 31))
+                            ->required()
+                            ->formatStateUsing(fn (?Task $record): ?array => $record?->byMonthDay)
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('monthly_options') === 'by_month_day'),
                         DateTimePicker::make('start_date')
                             ->native(false)
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->startDate),
                         DateTimePicker::make('end_date')
                             ->native(false)
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
+                        Placeholder::make('rrule_preview')
+                            ->content(fn (Get $get): string => self::getRrule($get())->getString())
+                            ->columnSpanFull(),
+                        Placeholder::make('upcoming_run_times')
+                            ->content(fn (Get $get): Collection => self::getUpcomingRunTimes($get()))
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
@@ -313,24 +347,62 @@ class TaskResource extends Resource
     public static function mutateFormData(array $data): array
     {
         $data['schedule'] = $data['has_schedule']
-            ? self::getSchedule($data)
+            ? self::getRrule($data)->getString()
             : null;
 
         return $data;
     }
 
-    private static function getSchedule(array $data): string
+    private static function getRrule(array $data): Rule
     {
         $rrule = (new Rule)
             ->setFreq((int) $data['frequency'])
-            ->setInterval($data['interval'])
-            ->setStartDate($data['start_date'])
-            ->setEndDate($data['end_date']);
+            ->setInterval($data['interval']);
 
-        if ($data['frequency'] == Frequency::WEEKLY && $data['weekly_options'] === 'by_day') {
-            $rrule->setByDay($data['by_day']);
+        switch ((int) $data['frequency']) {
+            case Frequency::WEEKLY:
+                if ($data['weekly_options'] === 'by_day' && $data['by_day']) {
+                    $rrule->setByDay($data['by_day']);
+                }
+
+                break;
+            case Frequency::MONTHLY:
+                if ($data['monthly_options'] === 'by_month_day' && $data['by_month_day']) {
+                    $rrule->setByMonthDay($data['by_month_day']);
+                }
+
+                break;
         }
 
-        return $rrule->getString();
+        if ($data['start_date']) {
+            $rrule->setStartDate(new Carbon($data['start_date']), true);
+        }
+
+        if ($data['end_date']) {
+            $rrule->setEndDate(new Carbon($data['end_date']));
+        }
+
+        return $rrule;
+    }
+
+    private static function getUpcomingRunTimes(array $data): Collection
+    {
+        $schedule = self::getRrule($data)->getString();
+
+        $scheduleStart = max(new Carbon($data['start_date']), now());
+
+        $scheduler = new Recurrence($schedule, $scheduleStart);
+
+        $lastRunTime = $scheduleStart->subSecond();
+
+        $upcomingRunTimes = collect();
+
+        for ($i = 0; $i < 3; $i++) {
+            $lastRunTime = $scheduler->next($lastRunTime);
+
+            $upcomingRunTimes->push($lastRunTime->toDayDateTimeString());
+        }
+
+        return $upcomingRunTimes;
     }
 }
