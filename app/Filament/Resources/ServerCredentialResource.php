@@ -52,7 +52,7 @@ class ServerCredentialResource extends Resource
             ->schema([
                 Section::make('Server Credential')
                     ->icon('tabler-info-hexagon')
-                    ->schema($schema);
+                    ->schema($schema),
             ]);
     }
 
