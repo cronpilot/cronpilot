@@ -16,27 +16,29 @@ class RunTask
      */
     public function handle(int $taskId): void
     {
-        $task = Task::find($taskId);
-        if (! $task) {
-            throw new Exception('Task not found');
-        }
+        $task = Task::findOrFail($taskId);
         $server = $task->server;
+
         if (! $server) {
             throw new Exception('Server not found');
         }
+
         $credential = $task->serverCredential;
+
         if (! $credential) {
             throw new Exception('Server credential not found');
         }
+
         $key = $credential->passphrase
             ? PublicKeyLoader::load($credential->ssh_private_key, $credential->passphrase)
             : PublicKeyLoader::load($credential->ssh_private_key);
         $ssh = new SSH2($server->hostname, $server->ssh_port);
+
         if (! $ssh->login($credential->username, $key)) {
             throw new Exception('Login failed');
         }
 
-        $run = new Run();
+        $run = new Run;
         $run->tenant_id = $task->tenant->id;
         $run->task_id = $task->id;
         $run->status = RunStatus::RUNNING;
