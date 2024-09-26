@@ -20,6 +20,7 @@ use Throwable;
 
 /**
  * @method static find(array|bool|string|null $argument)
+ *
  * @property Rule $rrule
  */
 class Task extends Model
@@ -76,7 +77,7 @@ class Task extends Model
         }
 
         try {
-            $translatedRrule = (new TextTransformer())->transform($this->rrule);
+            $translatedRrule = (new TextTransformer)->transform($this->rrule);
         } catch (Error $e) {
             return 'Custom';
         }
@@ -96,6 +97,11 @@ class Task extends Model
     public function getIntervalAttribute(): ?string
     {
         return $this->rrule?->getInterval();
+    }
+
+    public function getByDayAttribute(): ?array
+    {
+        return $this->rrule?->getByDay();
     }
 
     public function getStartDateAttribute(): ?Carbon
@@ -143,7 +149,7 @@ class Task extends Model
         $this->next_run_at = $nextOccurrenceTime;
     }
 
-    private function createRecurrence(): null|Recurrence
+    private function createRecurrence(): ?Recurrence
     {
         try {
             return new Recurrence($this->schedule, null);
@@ -153,7 +159,7 @@ class Task extends Model
         }
     }
 
-    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): null|CarbonInterface
+    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): ?CarbonInterface
     {
         return $this->createRecurrence()?->next($time);
     }
