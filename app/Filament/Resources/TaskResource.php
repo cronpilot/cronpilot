@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Actions\RunTask;
+use App\Enums\Day;
 use App\Enums\TaskStatus;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
@@ -130,15 +131,7 @@ class TaskResource extends Resource
                         Select::make('by_day')
                             ->multiple()
                             ->label('Days')
-                            ->options([
-                                'SU' => 'Sunday',
-                                'MO' => 'Monday',
-                                'TU' => 'Tuesday',
-                                'WE' => 'Wednesday',
-                                'TH' => 'Thursday',
-                                'FR' => 'Friday',
-                                'SA' => 'Saturday',
-                            ])
+                            ->options(Day::class)
                             ->required()
                             ->formatStateUsing(fn (?Task $record): ?array => $record?->byDay)
                             ->columnSpanFull()
