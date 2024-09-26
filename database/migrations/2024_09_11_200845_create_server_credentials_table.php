@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('server_credentials', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Tenant::class);
-            $table->string('title');
             $table->string('username');
             $table->text('ssh_private_key');
             $table->text('passphrase')->nullable();
