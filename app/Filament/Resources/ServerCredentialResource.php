@@ -17,6 +17,7 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Route;
 
 class ServerCredentialResource extends Resource
 {
@@ -30,21 +31,24 @@ class ServerCredentialResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $schema = [
+            TextInput::make('title')
+                ->required()
+                ->maxLength(255),
+            TextInput::make('username')
+                ->required()
+                ->maxLength(255),
+        ];
+
+        if (Route::currentRouteName() === CreateServerCredential::getRouteName()) {
+            $schema[] = TextArea::make('ssh_private_key')
+                ->required();
+            $schema[] = TextInput::make('passphrase')
+                ->password();
+        }
+
         return $form
-            ->schema([
-                TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('username')
-                    ->required()
-                    ->maxLength(255),
-                TextArea::make('ssh_private_key')
-                    ->required()
-                    ->hiddenOn(['view', 'edit']),
-                TextInput::make('passphrase')
-                    ->password()
-                    ->hiddenOn(['view', 'edit']),
-            ]);
+            ->schema($schema);
     }
 
     public static function table(Table $table): Table
