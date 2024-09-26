@@ -119,7 +119,7 @@ class ServerResource extends Resource
                         ->label('Hostname'),
                     TextEntry::make('deleted_at')
                         ->dateTime()
-                        ->hidden(fn(Server $record): bool => ! $record->deleted_at),
+                        ->hidden(fn (Server $record): bool => ! $record->deleted_at),
                     TextEntry::make('created_at')
                         ->dateTime(),
                     TextEntry::make('updated_at')

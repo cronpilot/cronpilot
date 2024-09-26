@@ -48,7 +48,7 @@ class UserResource extends Resource
                 ImageColumn::make('avatar_url')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn(User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
                     ),
                 TextColumn::make('name')
                     ->searchable(),
@@ -99,7 +99,7 @@ class UserResource extends Resource
                         ->label('Avatar')
                         ->circular()
                         ->defaultImageUrl(
-                            fn(User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                            fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
                         ),
                     Group::make()
                         ->schema([
@@ -112,7 +112,7 @@ class UserResource extends Resource
                             TextEntry::make('email_verified_at')
                                 ->dateTime(),
                             TextEntry::make('deleted_at')
-                                ->hidden(fn(User $record): bool => ! $record->deleted_at)
+                                ->hidden(fn (User $record): bool => ! $record->deleted_at)
                                 ->dateTime(),
                             TextEntry::make('created_at')
                                 ->dateTime(),

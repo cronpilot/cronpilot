@@ -49,8 +49,8 @@ class RunResource extends Resource
                     ->visible($showTask),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(Run $record): string => $record->status->getColor())
-                    ->icon(fn(Run $record): string => $record->status->getIcon())
+                    ->color(fn (Run $record): string => $record->status->getColor())
+                    ->icon(fn (Run $record): string => $record->status->getIcon())
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('durationForHumans')
@@ -59,7 +59,7 @@ class RunResource extends Resource
                     ->toggleable(),
                 TextColumn::make('triggerable.name')
                     ->label('Triggered by')
-                    ->icon(fn(Run $record): ?string => match ($record->triggerable_type) {
+                    ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
                         User::class => UserResource::ICON,
                         Task::class => TaskResource::ICON,
                         default => null,
@@ -115,14 +115,14 @@ class RunResource extends Resource
                     ->schema([
                         TextEntry::make('task.name')
                             ->icon(TaskResource::ICON)
-                            ->url(fn(Run $record): string => TaskResource::getUrl('view', [
+                            ->url(fn (Run $record): string => TaskResource::getUrl('view', [
                                 'record' => $record->task,
                             ]))
                             ->visible($showTask),
                         TextEntry::make('status')
                             ->badge()
-                            ->color(fn(Run $record): string => $record->status->getColor())
-                            ->icon(fn(Run $record): string => $record->status->getIcon()),
+                            ->color(fn (Run $record): string => $record->status->getColor())
+                            ->icon(fn (Run $record): string => $record->status->getIcon()),
                         TextEntry::make('durationForHumans')
                             ->label('Run duration'),
                         ViewEntry::make('output')
@@ -131,12 +131,12 @@ class RunResource extends Resource
                             ->columnSpanFull(),
                         TextEntry::make('triggerable.name')
                             ->label('Triggered by')
-                            ->icon(fn(Run $record): ?string => match ($record->triggerable_type) {
+                            ->icon(fn (Run $record): ?string => match ($record->triggerable_type) {
                                 User::class => UserResource::ICON,
                                 Task::class => TaskResource::ICON,
                                 default => null,
                             })
-                            ->url(fn(Run $record): ?string => match ($record->triggerable_type) {
+                            ->url(fn (Run $record): ?string => match ($record->triggerable_type) {
                                 User::class => UserResource::getUrl('view', ['record' => $record->triggerable]),
                                 Task::class => TaskResource::getUrl('view', ['record' => $record->triggerable]),
                                 default => null,
@@ -148,7 +148,7 @@ class RunResource extends Resource
                             ->dateTime(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->hidden(fn(Run $record): bool => ! $record->deleted_at),
+                            ->hidden(fn (Run $record): bool => ! $record->deleted_at),
                     ]),
             ]);
     }

@@ -106,9 +106,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
                         ->closeOnDateSelection(),
                     TextInput::make('password')
                         ->password()
-                        ->dehydrateStateUsing(fn(?string $state): string => Hash::make($state))
-                        ->dehydrated(fn(?string $state): bool => filled($state))
-                        ->required(fn(string $context): bool => $context === 'create')
+                        ->dehydrateStateUsing(fn (?string $state): string => Hash::make($state))
+                        ->dehydrated(fn (?string $state): bool => filled($state))
+                        ->required(fn (string $context): bool => $context === 'create')
                         ->maxLength(255),
                 ])->columns(2),
         ];
