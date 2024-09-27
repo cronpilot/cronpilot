@@ -157,6 +157,4 @@ class Task extends Model
     {
         return $this->createRecurrence()?->next($time);
     }
-
-
 }
