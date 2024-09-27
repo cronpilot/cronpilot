@@ -78,8 +78,11 @@ class TaskResource extends Resource
                             ->columnSpanFull(),
                         Checkbox::make('has_schedule')
                             ->formatStateUsing(fn(?Task $record): bool => (bool)$record?->schedule ?? true)
+                            ->live(),
+                        Checkbox::make('pause')
+                            ->formatStateUsing(fn(?Task $record): bool => (bool)$record?->paused ?? false)
                             ->live()
-                            ->columnSpanFull(),
+                            ->label('Pause task'),
                     ]),
                 FormSection::make('Schedule')
                     ->icon('tabler-clock')
@@ -147,6 +150,14 @@ class TaskResource extends Resource
                     ->badge()
                     ->color(fn(Task $record): string => $record->lastRunStatus->getColor())
                     ->icon(fn(Task $record): string => $record->lastRunStatus->getIcon())
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('paused')
+                    ->formatStateUsing(fn($state) => $state ? 'Yes' : 'No')
+                    ->badge()
+                    ->color(fn($state) => $state ? 'danger' : 'success')
+                    ->default(fn($state) => $state)
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
@@ -226,6 +237,11 @@ class TaskResource extends Resource
                             ->badge()
                             ->color(fn(Task $record): string => $record->status->getColor())
                             ->icon(fn(Task $record): string => $record->status->getIcon()),
+                        TextEntry::make('paused')
+                            ->formatStateUsing(fn($state) => $state ? 'Yes' : 'No')
+                            ->badge()
+                            ->color(fn($state) => $state ? 'danger' : 'success')
+                            ->default(fn($state) => $state),
                         TextEntry::make('description')
                             ->columnSpanFull()
                             ->color('gray'),
@@ -250,7 +266,7 @@ class TaskResource extends Resource
                             ->icon(fn(Task $record): string => $record->lastRunStatus->getIcon()),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->hidden(fn(Task $record): bool => ! $record->deleted_at),
+                            ->hidden(fn(Task $record): bool => !$record->deleted_at),
                         TextEntry::make('created_at')
                             ->dateTime(),
                         TextEntry::make('updated_at')
