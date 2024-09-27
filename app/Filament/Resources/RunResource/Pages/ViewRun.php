@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\RunResource\Pages;
 
 use App\Filament\Resources\RunResource;
-use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewRun extends ViewRecord
@@ -13,7 +13,7 @@ class ViewRun extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

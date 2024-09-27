@@ -92,6 +92,7 @@ class UserResource extends Resource
     {
         return [
             Section::make('User Information')
+                ->icon(self::ICON)
                 ->columns(3)
                 ->description('View user information')
                 ->schema([

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Filament\Resources\ServerResource;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +35,7 @@ class Server extends Model
         return [
             Section::make('Server Information')
                 ->columns(2)
-                ->icon('tabler-info-hexagon')
+                ->icon(ServerResource::ICON)
                 ->schema([ TextInput::make('name')
                     ->required()
                     ->maxLength(255),

@@ -18,7 +18,6 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Route;
 
 class ServerCredentialResource extends Resource
 {
@@ -51,7 +50,7 @@ class ServerCredentialResource extends Resource
         return $form
             ->schema([
                 Section::make('Server Credential')
-                    ->icon('tabler-info-hexagon')
+                    ->icon(self::ICON)
                     ->schema($schema),
             ]);
     }

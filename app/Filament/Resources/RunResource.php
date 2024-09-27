@@ -3,21 +3,21 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RunResource\Pages\CreateRun;
-use App\Filament\Resources\RunResource\Pages\EditRun;
 use App\Filament\Resources\RunResource\Pages\ListRuns;
 use App\Filament\Resources\RunResource\Pages\ViewRun;
 use App\Filament\Resources\RunResource\RelationManagers\ParametersRelationManager;
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteAction as TableDeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
@@ -94,7 +94,7 @@ class RunResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
-                EditAction::make(),
+                TableDeleteAction::make(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -109,8 +109,8 @@ class RunResource extends Resource
     {
         return $infolist
             ->schema([
-                Section::make('Runs')
-                    ->icon('tabler-info-hexagon')
+                Section::make('Run')
+                    ->icon(self::ICON)
                     ->columns(3)
                     ->schema([
                         TextEntry::make('task.name')
@@ -166,7 +166,6 @@ class RunResource extends Resource
             'index' => ListRuns::route('/'),
             'create' => CreateRun::route('/create'),
             'view' => ViewRun::route('/{record}'),
-            'edit' => EditRun::route('/{record}/edit'),
         ];
     }
 

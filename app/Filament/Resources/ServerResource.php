@@ -107,6 +107,7 @@ class ServerResource extends Resource
     {
         return [
             Section::make('Server Information')
+                ->icon(self::ICON)
                 ->columns(2)
                 ->schema([
                     TextEntry::make('name'),

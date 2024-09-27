@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Filament\Resources\UserResource;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
@@ -83,9 +84,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public static function getForm(): array
     {
         return [
-            Section::make('Users')
-                ->description('Information about users')
-                ->icon('heroicon-o-users')
+            Section::make('User')
+                ->description('Information about this user')
+                ->icon(UserResource::ICON)
                 ->schema([
                     FileUpload::make('avatar_url')
                         ->label('Avatar')
