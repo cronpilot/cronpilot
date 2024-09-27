@@ -3,6 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Filament\Resources\UserResource;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -13,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @method static create(array $array)
@@ -73,5 +79,39 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function canAccessTenant(Model $tenant): bool
     {
         return $this->tenants()->whereKey($tenant)->exists();
+    }
+
+    public static function getForm(): array
+    {
+        return [
+            Section::make('User')
+                ->description('Information about this user')
+                ->icon(UserResource::ICON)
+                ->schema([
+                    FileUpload::make('avatar_url')
+                        ->label('Avatar')
+                        ->columnSpanFull()
+                        ->avatar()
+                        ->directory('avatars')
+                        ->imageEditor()
+                        ->maxSize(1024 * 1024 * 10),
+                    TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('email')
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
+                    DateTimePicker::make('email_verified_at')
+                        ->native(false)
+                        ->closeOnDateSelection(),
+                    TextInput::make('password')
+                        ->password()
+                        ->dehydrateStateUsing(fn (?string $state): string => Hash::make($state))
+                        ->dehydrated(fn (?string $state): bool => filled($state))
+                        ->required(fn (string $context): bool => $context === 'create')
+                        ->maxLength(255),
+                ])->columns(2),
+        ];
     }
 }

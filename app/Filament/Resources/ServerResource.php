@@ -8,7 +8,7 @@ use App\Filament\Resources\ServerResource\Pages\ListServers;
 use App\Filament\Resources\ServerResource\Pages\ViewServer;
 use App\Filament\Resources\ServerResource\RelationManagers\TasksRelationManager;
 use App\Models\Server;
-use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Section;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -24,6 +24,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use phpDocumentor\Reflection\Types\Self_;
 
 class ServerResource extends Resource
 {
@@ -38,19 +39,9 @@ class ServerResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('hostname')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('ssh_port')
-                    ->default(22)
-                    ->required()
-                    ->numeric(),
-            ]);
+            ->schema(Server::getForm());
     }
+
 
     public static function table(Table $table): Table
     {
@@ -109,23 +100,33 @@ class ServerResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
-            ->schema([
-                TextEntry::make('name'),
-                TextEntry::make('ssh_port')
-                    ->label('SSH port')
-                    ->numeric()
-                    ->badge(),
-                TextEntry::make('hostname')
-                    ->columnSpanFull()
-                    ->label('Hostname'),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->hidden(fn (Server $record): bool => ! $record->deleted_at),
-                TextEntry::make('created_at')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),
-            ]);
+            ->schema(self::getServerInfoList());
+    }
+
+    private static function getServerInfoList(): array
+    {
+        return [
+            Section::make('Server Information')
+                ->icon(self::ICON)
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('name'),
+                    TextEntry::make('ssh_port')
+                        ->label('SSH port')
+                        ->numeric()
+                        ->badge(),
+                    TextEntry::make('hostname')
+                        ->columnSpanFull()
+                        ->label('Hostname'),
+                    TextEntry::make('deleted_at')
+                        ->dateTime()
+                        ->hidden(fn (Server $record): bool => ! $record->deleted_at),
+                    TextEntry::make('created_at')
+                        ->dateTime(),
+                    TextEntry::make('updated_at')
+                        ->dateTime(),
+                ]),
+        ];
     }
 
     public static function getRelations(): array

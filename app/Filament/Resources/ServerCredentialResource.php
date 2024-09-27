@@ -6,6 +6,7 @@ use App\Filament\Resources\ServerCredentialResource\Pages\CreateServerCredential
 use App\Filament\Resources\ServerCredentialResource\Pages\EditServerCredential;
 use App\Filament\Resources\ServerCredentialResource\Pages\ListServerCredentials;
 use App\Models\ServerCredential;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -17,7 +18,6 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Route;
 
 class ServerCredentialResource extends Resource
 {
@@ -48,7 +48,11 @@ class ServerCredentialResource extends Resource
         }
 
         return $form
-            ->schema($schema);
+            ->schema([
+                Section::make('Server Credential')
+                    ->icon(self::ICON)
+                    ->schema($schema),
+            ]);
     }
 
     public static function table(Table $table): Table

@@ -7,12 +7,10 @@ use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\User;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -40,29 +38,7 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                FileUpload::make('avatar_url')
-                    ->label('Avatar')
-                    ->columnSpanFull()
-                    ->avatar()
-                    ->directory('avatars')
-                    ->imageEditor()
-                    ->maxSize(1024 * 1024 * 10),
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                DateTimePicker::make('email_verified_at'),
-                TextInput::make('password')
-                    ->password()
-                    ->dehydrateStateUsing(fn (?string $state): string => Hash::make($state))
-                    ->dehydrated(fn (?string $state): bool => filled($state))
-                    ->required(fn (string $context): bool => $context === 'create')
-                    ->maxLength(255),
-            ]);
+            ->schema(User::getForm());
     }
 
     public static function table(Table $table): Table
@@ -72,7 +48,7 @@ class UserResource extends Resource
                 ImageColumn::make('avatar_url')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
+                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
                     ),
                 TextColumn::make('name')
                     ->searchable(),
@@ -109,32 +85,43 @@ class UserResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
-            ->columns(3)
-            ->schema([
-                ImageEntry::make('avatar_url')
-                    ->label('Avatar')
-                    ->circular()
-                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
-                    ),
-                Group::make()
-                    ->schema([
-                        TextEntry::make('name'),
-                        TextEntry::make('email')
-                            ->icon('tabler-mail'),
-                    ]),
-                Group::make()
-                    ->schema([
-                        TextEntry::make('email_verified_at')
-                            ->dateTime(),
-                        TextEntry::make('deleted_at')
-                            ->hidden(fn (User $record): bool => ! $record->deleted_at)
-                            ->dateTime(),
-                        TextEntry::make('created_at')
-                            ->dateTime(),
-                        TextEntry::make('updated_at')
-                            ->dateTime(),
-                    ]),
-            ]);
+            ->schema(self::getInfolistForm());
+    }
+
+    private static function getInfolistForm(): array
+    {
+        return [
+            Section::make('User Information')
+                ->icon(self::ICON)
+                ->columns(3)
+                ->description('View user information')
+                ->schema([
+                    ImageEntry::make('avatar_url')
+                        ->label('Avatar')
+                        ->circular()
+                        ->defaultImageUrl(
+                            fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                        ),
+                    Group::make()
+                        ->schema([
+                            TextEntry::make('name'),
+                            TextEntry::make('email')
+                                ->icon('tabler-mail'),
+                        ]),
+                    Group::make()
+                        ->schema([
+                            TextEntry::make('email_verified_at')
+                                ->dateTime(),
+                            TextEntry::make('deleted_at')
+                                ->hidden(fn (User $record): bool => ! $record->deleted_at)
+                                ->dateTime(),
+                            TextEntry::make('created_at')
+                                ->dateTime(),
+                            TextEntry::make('updated_at')
+                                ->dateTime(),
+                        ]),
+                ]),
+        ];
     }
 
     public static function getRelations(): array
