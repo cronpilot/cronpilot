@@ -44,6 +44,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
+use Illuminate\Support\HtmlString;
 use Recurr\Frequency;
 use Recurr\Rule;
 
@@ -184,7 +185,7 @@ class TaskResource extends Resource
                             ->columns(2)
                             ->columnSpanFull()
                             ->reorderable(false)
-                            ->formatStateUsing(fn (Task $record): array => $record?->frequency === Frequency::MONTHLY && $record?->byDay
+                            ->formatStateUsing(fn (?Task $record): array => $record?->frequency === Frequency::MONTHLY && $record?->byDay
                                 ? $record->byDay
                                 : [[
                                     'ordinal' => 1,
@@ -195,15 +196,23 @@ class TaskResource extends Resource
                         DateTimePicker::make('start_date')
                             ->native(false)
                             ->required()
-                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? now()),
+                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? today()),
                         DateTimePicker::make('end_date')
                             ->native(false)
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
+                        Placeholder::make('upcoming_run_times')
+                            ->content(fn (Get $get): HtmlString => new HtmlString(
+                                '<ul class="list-disc list-inside">'
+                                .implode(
+                                    self::getUpcomingRunTimes($get())
+                                        ->map(fn (string $runTime): string => "<li>{$runTime}</li>")
+                                        ->toArray()
+                                )
+                                .'</ul>'
+                            ))
+                            ->columnSpanFull(),
                         Placeholder::make('rrule_preview')
                             ->content(fn (Get $get): string => self::getRrule($get())->getString())
-                            ->columnSpanFull(),
-                        Placeholder::make('upcoming_run_times')
-                            ->content(fn (Get $get): Collection => self::getUpcomingRunTimes($get()))
                             ->columnSpanFull(),
                     ]),
             ]);
