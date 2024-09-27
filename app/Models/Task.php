@@ -8,6 +8,7 @@ use App\Helpers\Recurrence;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Error;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -106,6 +107,13 @@ class Task extends Model
         return new Carbon($this->rrule->getStartDate());
     }
 
+    public function scopeReadyToRun(Builder $query): void
+    {
+        $query->where('next_run_at', '<=', now())
+            ->where('status', '!=', TaskStatus::DISABLED)
+            ->where('paused', '!=', true);
+    }
+
     public function getEndDateAttribute(): ?Carbon
     {
         if (! $this->rrule?->getEndDate()) {
@@ -149,4 +157,6 @@ class Task extends Model
     {
         return $this->createRecurrence()?->next($time);
     }
+
+
 }
