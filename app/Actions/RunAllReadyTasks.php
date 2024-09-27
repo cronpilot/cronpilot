@@ -12,6 +12,7 @@ class RunAllReadyTasks
         $tasks = Task::query()
             ->where('next_run_at', '<=', now())
             ->where('status', '!=', TaskStatus::DISABLED)
+            ->where('paused', '!=', true)
             ->get();
 
         foreach ($tasks as $task) {
