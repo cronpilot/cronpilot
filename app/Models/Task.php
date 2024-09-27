@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Recurr\Frequency;
 use Recurr\Rule;
 use Recurr\Transformer\TextTransformer;
 use Throwable;
@@ -99,7 +100,30 @@ class Task extends Model
 
     public function getByDayAttribute(): ?array
     {
-        return $this->rrule?->getByDay();
+        if (! $this->rrule) {
+            return null;
+        }
+
+        $byDay = collect($this->rrule->getByDay());
+
+        if ($byDay->isEmpty()) {
+            return null;
+        }
+
+        if ($this->frequency === Frequency::WEEKLY) {
+            return $byDay->toArray();
+        }
+
+        return $byDay
+            ->map(function (string $byDay): array {
+                preg_match('/^(-?\d+)?([A-Z]{2})$/', $byDay, $matches);
+
+                return [
+                    'ordinal' => $matches[0],
+                    'day' => $matches[1],
+                ];
+            })
+            ->toArray();
     }
 
     public function getByMonthDayAttribute(): ?array
