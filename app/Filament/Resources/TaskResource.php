@@ -70,6 +70,8 @@ class TaskResource extends Resource
                             ->required()
                             ->maxLength(255),
                         Select::make('status')
+                            ->required()
+                            ->default(TaskStatus::ACTIVE)
                             ->options(TaskStatus::class),
                         Select::make('server_id')
                             ->relationship('server', 'name')
