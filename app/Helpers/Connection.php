@@ -2,40 +2,52 @@
 
 namespace App\Helpers;
 
+use App\Models\ServerCredential;
 use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Net\SSH2;
 use Exception;
 
 class Connection
 {
-    private string $ssh_private_key;
-    private string $passphrase;
     private string $hostname;
-    private string $username;
+    private int $credentialId;
 
-    public function __construct(string $ssh_private_key, string $passphrase, string $hostname, string $username)
+    public function __construct(
+        string $hostname,
+        int    $credentialId
+    )
     {
-        $this->ssh_private_key = $ssh_private_key;
         $this->hostname = $hostname;
-        $this->passphrase = $passphrase;
-        $this->username = $username;
+        $this->credentialId = $credentialId;
     }
 
     /**
      * @throws Exception
      */
-    public function connectToServer(): bool
+    public function connectToServer(): array
     {
+        $credentials = ServerCredential::query()->find($this->credentialId);
         try {
-            $key = PublicKeyLoader::load($this->ssh_private_key, $this->passphrase);
-            $ssh = new SSH2($this->hostname);
 
-            if (!$ssh->login($this->username, $key)) {
-                return false;
+            if (!$credentials) {
+                return [
+                    'connected' => false,
+                    'credentials' => null
+                ];
             }
-            return true;
+            $key = PublicKeyLoader::load($credentials->ssh_private_key, $credentials->passphrase);
+            $ssh = new SSH2($this->hostname);
+           $isConnected = $ssh->login($credentials->username, $key);
+            return [
+                'connected' => $isConnected,
+                'credentials' => $credentials->title,
+            ];
+
         } catch (\Exception $e) {
-            throw new Exception('Connection Failed: ' . $e->getMessage());
+            return [
+                'connected' => false,
+                'credentials' => $credentials->title
+            ];
         }
 
     }

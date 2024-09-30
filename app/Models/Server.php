@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -17,10 +18,6 @@ class Server extends Model
         'tenant_id',
     ];
 
-    protected $casts = [
-        'server_credentials_id' => 'integer'
-    ];
-
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -31,9 +28,9 @@ class Server extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function serverCredentials(): BelongsTo
+    public function credentials(): BelongsToMany
     {
-        return $this->belongsTo(ServerCredential::class);
+        return $this->belongsToMany(ServerCredential::class, 'server_server_credentials');
     }
 
 }

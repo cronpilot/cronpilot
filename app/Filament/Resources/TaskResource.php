@@ -17,6 +17,7 @@ use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Infolists\Components\Section as InfolistSection;
@@ -32,6 +33,7 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -62,7 +64,8 @@ class TaskResource extends Resource
                             ->required()
                             ->maxLength(255),
                         Select::make('status')
-                            ->options(TaskStatus::class),
+                            ->options(TaskStatus::class)
+                            ->native(false),
                         Select::make('server_id')
                             ->relationship('server', 'name')
                             ->searchable()
@@ -79,8 +82,9 @@ class TaskResource extends Resource
                         Checkbox::make('has_schedule')
                             ->formatStateUsing(fn(?Task $record): bool => (bool)$record?->schedule ?? true)
                             ->live(),
-                        Checkbox::make('pause')
-                            ->formatStateUsing(fn(?Task $record): bool => (bool)$record?->paused ?? false)
+                        Toggle::make('paused')
+                            ->default(false)
+                            ->onColor('danger')
                             ->live()
                             ->label('Pause task'),
                     ]),
@@ -153,11 +157,8 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('paused')
-                    ->formatStateUsing(fn($state) => $state ? 'Yes' : 'No')
-                    ->badge()
-                    ->color(fn($state) => $state ? 'danger' : 'success')
-                    ->default(fn($state) => $state)
+                ToggleColumn::make('paused')
+                    ->onColor('danger')
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
@@ -237,7 +238,8 @@ class TaskResource extends Resource
                             ->badge()
                             ->color(fn(Task $record): string => $record->status->getColor())
                             ->icon(fn(Task $record): string => $record->status->getIcon()),
-                        TextEntry::make('paused')
+                        TextEntry::make('paused') //no component for toggle in infolist
+                            ->badge()
                             ->formatStateUsing(fn($state) => $state ? 'Yes' : 'No')
                             ->badge()
                             ->color(fn($state) => $state ? 'danger' : 'success')

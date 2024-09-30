@@ -31,11 +31,28 @@ class ServerCredentialResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $schema = [
+            TextInput::make('title')
+                ->required()
+                ->maxLength(255),
+            TextInput::make('username')
+                ->required()
+                ->maxLength(255),
+        ];
+
+        if ($form->getOperation() === 'create') {
+            $schema[] = TextArea::make('ssh_private_key')
+                ->required();
+            $schema[] = TextInput::make('passphrase')
+                ->password();
+        }
+
         return $form
             ->schema([
-                Section::make('Server Credential')
-                    ->icon(self::ICON)
-                    ->schema(self::getForm($form)),
+                Section::make('Server Credentials')
+                ->icon('tabler-id-badge-2')
+                ->schema($schema)
+                ->columns(2)
             ]);
     }
 
@@ -47,6 +64,10 @@ class ServerCredentialResource extends Resource
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('username')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('no_of_servers')
+                    ->getStateUsing(fn($record)=>$record->servers()->count())
                     ->sortable()
                     ->searchable(),
             ])
@@ -64,26 +85,6 @@ class ServerCredentialResource extends Resource
             ]);
     }
 
-    public static function getForm(Form $form): array
-    {
-        $schema = [
-            TextInput::make('title')
-                ->required()
-                ->maxLength(255),
-            TextInput::make('username')
-                ->required()
-                ->maxLength(255),
-        ];
-
-        if ($form->getOperation() === 'create') {
-            $schema[] = TextArea::make('ssh_private_key')
-                ->required();
-            $schema[] = TextInput::make('passphrase')
-                ->password();
-        }
-
-        return $schema;
-    }
 
     public static function getRelations(): array
     {

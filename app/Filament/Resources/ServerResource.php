@@ -10,7 +10,6 @@ use App\Filament\Resources\ServerResource\Pages\ViewServer;
 use App\Filament\Resources\ServerResource\RelationManagers\TasksRelationManager;
 use App\Helpers\Connection;
 use App\Models\Server;
-use App\Models\ServerCredential;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -55,10 +54,15 @@ class ServerResource extends Resource
                     ->icon(ServerResource::ICON)
                     ->schema([
                         Select::make('server_type')
-                            ->options(ServerType::class)
+                            ->options(
+                                collect(
+                                    ServerType::cases())
+                                    ->mapWithKeys(fn($type) => [$type->value => $type->label()])
+                            )
                             ->columnSpanFull()
                             ->required()
-                            ->reactive(),
+                            ->reactive()
+                            ->native(false),
                         TextInput::make('name')
                             ->required()
                             ->columnSpanFull()
@@ -72,14 +76,15 @@ class ServerResource extends Resource
                             ->required(fn(Get $get) => $get('server_type') !== ServerType::LOCAL->value)
                             ->hidden(fn(Get $get) => $get('server_type') === ServerType::LOCAL->value)
                             ->numeric(),
-                        Select::make('server_credentials_id')
-                            ->relationship('serverCredentials', 'title')
+                        Select::make('server_credentials')
+                            ->relationship('credentials', 'title')
                             ->searchable()
                             ->required()
                             ->columnSpanFull()
                             ->required(fn(Get $get) => $get('server_type') !== ServerType::LOCAL->value)
                             ->hidden(fn(Get $get) => $get('server_type') === ServerType::LOCAL->value)
                             ->label('Select Credential')
+                            ->multiple()
                             ->reactive(),
                     ])
                     ->headerActions([
@@ -87,12 +92,32 @@ class ServerResource extends Resource
                             ->color('danger')
                             ->label('Test Connection')
                             ->action(function ($state) {
-                                self::testConnection($state);
+                                if (!$state['server_credentials']) {
+                                    Notification::make()
+                                        ->title('Please select a credential to test connection')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+                                $connectionResponse = self::testConnection($state);
+                                foreach ($connectionResponse as $response) {
+                                    if ($response["connected"]) {
+                                        Notification::make()
+                                            ->title('Connection failed for credential: ' . $response['credentials'])
+                                            ->success()
+                                            ->send();
+                                    } else {
+                                        Notification::make()
+                                            ->title('Connection failed for credential: ' . $response['credentials'])
+                                            ->danger()
+                                            ->send();
+                                    }
+
+                                }
                             })
                             ->disabled(fn(Get $get) => $get('server_type') === ServerType::LOCAL->value
                                 || $get('server_type') === null
-                                || !filled($get('server_credentials_id')
-                                    || !filled($get('hostname')))),
+                                || (!filled($get('server_credentials_id') || !filled($get('hostname'))))),
                     ])
             ]);
     }
@@ -158,37 +183,22 @@ class ServerResource extends Resource
             ->schema(self::getServerInfoList());
     }
 
-    public static function testConnection(array $state): void
+    /**
+     * @throws \Exception
+     */
+    public static function testConnection(array $state): array
     {
-        $credentials = ServerCredential::query()->find((int)$state["server_credentials_id"]);
-        $connection = new Connection(
-            $credentials?->ssh_private_key,
-            $credentials?->passphrase,
-            $state["hostname"],
-            $credentials?->username,
-        );
-
-        try {
-            $isSucceeded = $connection->connectToServer();
-            if ($isSucceeded) {
-                Notification::make()
-                    ->title('Connection Succeeded')
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Connection Failed')
-                    ->danger()
-                    ->send();
-            }
-
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Connection Error')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
+        $connectionStatus = [];
+        foreach ($state["server_credentials"] as $credentialId) {
+            $connection = new Connection(
+                $state["hostname"],
+                (int)$credentialId,
+            );
+            $connectionStatus[] = $connection->connectToServer();
         }
+
+        return $connectionStatus;
+
 
     }
 
