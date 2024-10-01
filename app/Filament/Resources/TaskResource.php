@@ -77,14 +77,14 @@ class TaskResource extends Resource
                         Textarea::make('command')
                             ->columnSpanFull(),
                         Checkbox::make('has_schedule')
-                            ->formatStateUsing(fn(?Task $record): bool => (bool)$record?->schedule ?? true)
+                            ->formatStateUsing(fn (?Task $record): bool => (bool) $record?->schedule ?? true)
                             ->live()
                             ->columnSpanFull(),
                     ]),
                 FormSection::make('Schedule')
                     ->icon('tabler-clock')
                     ->columns(2)
-                    ->visible(fn(Get $get): bool => (bool)$get('has_schedule'))
+                    ->visible(fn (Get $get): bool => (bool) $get('has_schedule'))
                     ->schema([
                         Select::make('frequency')
                             ->options([
@@ -96,30 +96,30 @@ class TaskResource extends Resource
                                 Frequency::MONTHLY => 'Monthly',
                                 Frequency::YEARLY => 'Yearly',
                             ])
-                            ->formatStateUsing(fn(?Task $record): int => $record?->frequency ?? Frequency::DAILY)
+                            ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
                             ->required()
                             ->live()
                             ->native(false),
                         TextInput::make('interval')
                             ->prefix('Every')
-                            ->suffix(fn(Get $get): string => match ((int)$get('frequency')) {
-                                    Frequency::SECONDLY => 'second',
-                                    Frequency::MINUTELY => 'minute',
-                                    Frequency::HOURLY => 'hour',
-                                    Frequency::DAILY => 'day',
-                                    Frequency::WEEKLY => 'week',
-                                    Frequency::MONTHLY => 'month',
-                                    Frequency::YEARLY => 'year',
-                                } . '(s)')
+                            ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
+                                Frequency::SECONDLY => 'second',
+                                Frequency::MINUTELY => 'minute',
+                                Frequency::HOURLY => 'hour',
+                                Frequency::DAILY => 'day',
+                                Frequency::WEEKLY => 'week',
+                                Frequency::MONTHLY => 'month',
+                                Frequency::YEARLY => 'year',
+                            }.'(s)')
                             ->integer()
-                            ->formatStateUsing(fn(?Task $record): int => $record?->interval ?? 1)
+                            ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
                         DateTimePicker::make('start_date')
                             ->native(false)
-                            ->formatStateUsing(fn(?Task $record): ?Carbon => $record?->startDate),
+                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->startDate),
                         DateTimePicker::make('end_date')
                             ->native(false)
-                            ->formatStateUsing(fn(?Task $record): ?Carbon => $record?->endDate),
+                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
                     ]),
             ]);
     }
@@ -138,15 +138,11 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(Task $record): string => $record->status->getColor())
-                    ->icon(fn(Task $record): string => $record->status->getIcon())
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('lastRunStatus')
                     ->badge()
-                    ->color(fn(Task $record): string => $record->lastRunStatus->getColor())
-                    ->icon(fn(Task $record): string => $record->lastRunStatus->getIcon())
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
@@ -223,16 +219,14 @@ class TaskResource extends Resource
                     ->schema([
                         TextEntry::make('name'),
                         TextEntry::make('status')
-                            ->badge()
-                            ->color(fn(Task $record): string => $record->status->getColor())
-                            ->icon(fn(Task $record): string => $record->status->getIcon()),
+                            ->badge(),
                         TextEntry::make('description')
                             ->columnSpanFull()
                             ->color('gray'),
                         TextEntry::make('server.name')
                             ->placeholder('No server')
                             ->icon(ServerResource::ICON)
-                            ->url(fn(Task $record): ?string => $record->server
+                            ->url(fn (Task $record): ?string => $record->server
                                 ? ServerResource::getUrl('view', ['record' => $record->server])
                                 : null
                             )
@@ -245,12 +239,10 @@ class TaskResource extends Resource
                         TextEntry::make('scheduleForHumans')
                             ->label('Schedule'),
                         TextEntry::make('lastRunStatus')
-                            ->badge()
-                            ->color(fn(Task $record): string => $record->lastRunStatus->getColor())
-                            ->icon(fn(Task $record): string => $record->lastRunStatus->getIcon()),
+                            ->badge(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->hidden(fn(Task $record): bool => ! $record->deleted_at),
+                            ->hidden(fn (Task $record): bool => ! $record->deleted_at),
                         TextEntry::make('created_at')
                             ->dateTime(),
                         TextEntry::make('updated_at')
@@ -299,7 +291,7 @@ class TaskResource extends Resource
     private static function getSchedule(array $data): Rule
     {
         return (new Rule)
-            ->setFreq((int)$data['frequency'])
+            ->setFreq((int) $data['frequency'])
             ->setInterval($data['interval'])
             ->setStartDate($data['start_date'])
             ->setEndDate($data['end_date']);

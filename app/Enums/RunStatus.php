@@ -2,9 +2,11 @@
 
 namespace App\Enums;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum RunStatus: string implements HasLabel
+enum RunStatus: string implements HasColor, HasIcon, HasLabel
 {
     case SUCCESSFUL = 'Successful';
     case RUNNING = 'Running';
