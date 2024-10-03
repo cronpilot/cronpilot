@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Filament\Resources\ServerResource;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -30,22 +28,9 @@ class Server extends Model
         return $this->hasMany(Task::class);
     }
 
-    public static function getForm():array
+    public function credentials(): BelongsToMany
     {
-        return [
-            Section::make('Server Information')
-                ->columns(2)
-                ->icon(ServerResource::ICON)
-                ->schema([ TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                    TextInput::make('hostname')
-                        ->required()
-                        ->maxLength(255),
-                    TextInput::make('ssh_port')
-                        ->default(22)
-                        ->required()
-                        ->numeric()])
-        ];
+        return $this->belongsToMany(ServerCredential::class, 'server_server_credentials');
     }
+
 }

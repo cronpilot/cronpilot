@@ -49,9 +49,10 @@ class ServerCredentialResource extends Resource
 
         return $form
             ->schema([
-                Section::make('Server Credential')
-                    ->icon(self::ICON)
-                    ->schema($schema),
+                Section::make('Server Credentials')
+                ->icon('tabler-id-badge-2')
+                ->schema($schema)
+                ->columns(2)
             ]);
     }
 
@@ -63,6 +64,10 @@ class ServerCredentialResource extends Resource
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('username')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('no_of_servers')
+                    ->getStateUsing(fn($record)=>$record->servers()->count())
                     ->sortable()
                     ->searchable(),
             ])
