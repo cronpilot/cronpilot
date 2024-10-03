@@ -9,7 +9,6 @@ use App\Filament\Resources\RunResource\RelationManagers\ParametersRelationManage
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
-use Filament\Actions\DeleteAction;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -49,8 +48,6 @@ class RunResource extends Resource
                     ->visible($showTask),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (Run $record): string => $record->status->getColor())
-                    ->icon(fn (Run $record): string => $record->status->getIcon())
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('durationForHumans')
@@ -120,9 +117,7 @@ class RunResource extends Resource
                             ]))
                             ->visible($showTask),
                         TextEntry::make('status')
-                            ->badge()
-                            ->color(fn (Run $record): string => $record->status->getColor())
-                            ->icon(fn (Run $record): string => $record->status->getIcon()),
+                            ->badge(),
                         TextEntry::make('durationForHumans')
                             ->label('Run duration'),
                         ViewEntry::make('output')
