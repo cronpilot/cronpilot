@@ -110,7 +110,7 @@ class TaskResource extends Resource
                                 Frequency::WEEKLY => 'week',
                                 Frequency::MONTHLY => 'month',
                                 Frequency::YEARLY => 'year',
-                            }.'(s)')
+                            } . '(s)')
                             ->integer()
                             ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
