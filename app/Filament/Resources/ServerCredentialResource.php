@@ -6,6 +6,7 @@ use App\Filament\Resources\ServerCredentialResource\Pages\CreateServerCredential
 use App\Filament\Resources\ServerCredentialResource\Pages\EditServerCredential;
 use App\Filament\Resources\ServerCredentialResource\Pages\ListServerCredentials;
 use App\Models\ServerCredential;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,27 +32,25 @@ class ServerCredentialResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $schema = [
-            TextInput::make('title')
-                ->required()
-                ->maxLength(255),
-            TextInput::make('username')
-                ->required()
-                ->maxLength(255),
-        ];
-
-        if ($form->getOperation() === 'create') {
-            $schema[] = TextArea::make('ssh_private_key')
-                ->required();
-            $schema[] = TextInput::make('passphrase')
-                ->password();
-        }
-
         return $form
             ->schema([
                 Section::make('Server Credential')
                     ->icon(self::ICON)
-                    ->schema($schema),
+                    ->schema([
+                        TextInput::make('title')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('username')
+                            ->required()
+                            ->maxLength(255),
+                        Group::make([
+                            TextArea::make('ssh_private_key')
+                                ->required(),
+                            TextInput::make('passphrase')
+                                ->password(),
+                        ])
+                            ->visible($form->getOperation() === 'create'),
+                    ]),
             ]);
     }
 
