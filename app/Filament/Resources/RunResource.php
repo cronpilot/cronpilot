@@ -108,6 +108,7 @@ class RunResource extends Resource
             ->schema([
                 Section::make('Run')
                     ->icon(self::ICON)
+                    ->description('View information about a run')
                     ->columns(3)
                     ->schema([
                         TextEntry::make('task.name')

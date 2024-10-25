@@ -88,8 +88,8 @@ class UserResource extends Resource
             ->schema([
                 Section::make('User Information')
                     ->icon(self::ICON)
+                    ->description('View information about a user')
                     ->columns(3)
-                    ->description('View user information')
                     ->schema([
                         ImageEntry::make('avatar_url')
                             ->label('Avatar')

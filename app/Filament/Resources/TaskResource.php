@@ -110,7 +110,7 @@ class TaskResource extends Resource
                                 Frequency::WEEKLY => 'week',
                                 Frequency::MONTHLY => 'month',
                                 Frequency::YEARLY => 'year',
-                            } . '(s)')
+                            }.'(s)')
                             ->integer()
                             ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
@@ -215,6 +215,7 @@ class TaskResource extends Resource
             ->schema([
                 InfolistSection::make('Task Information')
                     ->icon(self::ICON)
+                    ->description('View information about a task')
                     ->columns(2)
                     ->schema([
                         TextEntry::make('name'),

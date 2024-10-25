@@ -8,8 +8,8 @@ use App\Filament\Resources\ServerResource\Pages\ListServers;
 use App\Filament\Resources\ServerResource\Pages\ViewServer;
 use App\Filament\Resources\ServerResource\RelationManagers\TasksRelationManager;
 use App\Models\Server;
-use Filament\Infolists\Components\Section;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -24,7 +24,6 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use phpDocumentor\Reflection\Types\Self_;
 
 class ServerResource extends Resource
 {
@@ -41,7 +40,6 @@ class ServerResource extends Resource
         return $form
             ->schema(Server::getForm());
     }
-
 
     public static function table(Table $table): Table
     {
@@ -108,6 +106,7 @@ class ServerResource extends Resource
         return [
             Section::make('Server Information')
                 ->icon(self::ICON)
+                ->description('View information about a server')
                 ->columns(2)
                 ->schema([
                     TextEntry::make('name'),
