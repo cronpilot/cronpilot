@@ -21,7 +21,6 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Hash;
 
 class UserResource extends Resource
 {
@@ -48,7 +47,8 @@ class UserResource extends Resource
                 ImageColumn::make('avatar_url')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                    ->defaultImageUrl(
+                        fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
                     ),
                 TextColumn::make('name')
                     ->searchable(),
@@ -85,43 +85,38 @@ class UserResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
-            ->schema(self::getInfolistForm());
-    }
-
-    private static function getInfolistForm(): array
-    {
-        return [
-            Section::make('User Information')
-                ->icon(self::ICON)
-                ->columns(3)
-                ->description('View user information')
-                ->schema([
-                    ImageEntry::make('avatar_url')
-                        ->label('Avatar')
-                        ->circular()
-                        ->defaultImageUrl(
-                            fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
-                        ),
-                    Group::make()
-                        ->schema([
-                            TextEntry::make('name'),
-                            TextEntry::make('email')
-                                ->icon('tabler-mail'),
-                        ]),
-                    Group::make()
-                        ->schema([
-                            TextEntry::make('email_verified_at')
-                                ->dateTime(),
-                            TextEntry::make('deleted_at')
-                                ->hidden(fn (User $record): bool => ! $record->deleted_at)
-                                ->dateTime(),
-                            TextEntry::make('created_at')
-                                ->dateTime(),
-                            TextEntry::make('updated_at')
-                                ->dateTime(),
-                        ]),
-                ]),
-        ];
+            ->schema([
+                Section::make('User Information')
+                    ->icon(self::ICON)
+                    ->columns(3)
+                    ->description('View user information')
+                    ->schema([
+                        ImageEntry::make('avatar_url')
+                            ->label('Avatar')
+                            ->circular()
+                            ->defaultImageUrl(
+                                fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
+                            ),
+                        Group::make()
+                            ->schema([
+                                TextEntry::make('name'),
+                                TextEntry::make('email')
+                                    ->icon('tabler-mail'),
+                            ]),
+                        Group::make()
+                            ->schema([
+                                TextEntry::make('email_verified_at')
+                                    ->dateTime(),
+                                TextEntry::make('deleted_at')
+                                    ->hidden(fn (User $record): bool => ! $record->deleted_at)
+                                    ->dateTime(),
+                                TextEntry::make('created_at')
+                                    ->dateTime(),
+                                TextEntry::make('updated_at')
+                                    ->dateTime(),
+                            ]),
+                    ]),
+            ]);
     }
 
     public static function getRelations(): array
