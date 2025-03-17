@@ -123,9 +123,9 @@ class Task extends Model
         return new Carbon($this->rrule->getEndDate());
     }
 
-    public function getLastRunStatusAttribute(): RunStatus
+    public function getLastRunStatusAttribute(): ?RunStatus
     {
-        return $this->runs()->latest()->first(['status'])->status;
+        return $this->runs()->latest()->first(['status'])?->status;
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void

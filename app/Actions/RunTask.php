@@ -28,8 +28,10 @@ class RunTask
         if (! $credential) {
             throw new Exception('Server credential not found');
         }
-        $key = PublicKeyLoader::load($credential->ssh_private_key, $credential->passphrase);
-        $ssh = new SSH2($server->hostname);
+        $key = $credential->passphrase
+            ? PublicKeyLoader::load($credential->ssh_private_key, $credential->passphrase)
+            : PublicKeyLoader::load($credential->ssh_private_key);
+        $ssh = new SSH2($server->hostname, $server->ssh_port);
         if (! $ssh->login($credential->username, $key)) {
             throw new Exception('Login failed');
         }
@@ -43,10 +45,19 @@ class RunTask
         $start = now();
 
         $output = $ssh->exec($task->command);
+        $exitStatus = $ssh->getExitStatus();
 
         $run->duration = $start->diffInSeconds(now());
         $run->output = $output;
-        $run->status = RunStatus::SUCCESSFUL;
+        if ($exitStatus === false) {
+            $run->status = RunStatus::FAILED;
+            $run->output .= "\n[ERROR] Unable to determine exit status.";
+        } elseif ($exitStatus !== 0) {
+            $run->status = RunStatus::FAILED;
+            $run->output .= "\n[ERROR] Command failed with exit status: {$exitStatus}";
+        } else {
+            $run->status = RunStatus::SUCCESSFUL;
+        }
         $run->save();
 
         // @todo: this is just fake for now. Implement properly once we have the rrules figured out
