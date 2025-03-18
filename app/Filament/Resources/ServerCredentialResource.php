@@ -95,4 +95,9 @@ class ServerCredentialResource extends Resource
             'edit' => EditServerCredential::route('/{record}/edit'),
         ];
     }
+
+    private static function getUserTimezone(): string
+    {
+        return auth()->user()->timezone;
+    }
 }

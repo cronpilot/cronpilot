@@ -84,15 +84,18 @@ class ServerResource extends Resource
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -129,12 +132,15 @@ class ServerResource extends Resource
                             ->columnSpanFull()
                             ->label('Hostname'),
                         TextEntry::make('deleted_at')
-                            ->dateTime()
+                            ->datetime()
+                            ->timezone(self::getUserTimezone())
                             ->hidden(fn (Server $record): bool => ! $record->deleted_at),
                         TextEntry::make('created_at')
-                            ->dateTime(),
+                            ->datetime()
+                            ->timezone(self::getUserTimezone()),
                         TextEntry::make('updated_at')
-                            ->dateTime(),
+                            ->datetime()
+                            ->timezone(self::getUserTimezone()),
                     ]),
             ]);
     }
@@ -162,5 +168,10 @@ class ServerResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    private static function getUserTimezone(): string
+    {
+        return auth()->user()->timezone;
     }
 }

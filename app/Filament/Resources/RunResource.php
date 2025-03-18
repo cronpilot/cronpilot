@@ -67,14 +67,17 @@ class RunResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: $showTask),
                 TextColumn::make('created_at')
                     ->label('Start time')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable(),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -139,11 +142,14 @@ class RunResource extends Resource
                             }),
                         TextEntry::make('created_at')
                             ->label('Start time')
-                            ->dateTime(),
+                            ->datetime()
+                            ->timezone(self::getUserTimezone()),
                         TextEntry::make('updated_at')
-                            ->dateTime(),
+                            ->datetime()
+                            ->timezone(self::getUserTimezone()),
                         TextEntry::make('deleted_at')
-                            ->dateTime()
+                            ->datetime()
+                            ->timezone(self::getUserTimezone())
                             ->hidden(fn (Run $record): bool => ! $record->deleted_at),
                     ]),
             ]);
@@ -171,5 +177,10 @@ class RunResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    private static function getUserTimezone(): string
+    {
+        return auth()->user()->timezone;
     }
 }
