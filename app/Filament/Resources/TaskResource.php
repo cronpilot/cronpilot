@@ -62,6 +62,8 @@ class TaskResource extends Resource
 
     public static function form(Form $form, bool $serverSelect = true): Form
     {
+        $userTimezone = auth()->user()->timezone;
+
         return $form
             ->schema([
                 FormSection::make('Task Information')
@@ -199,17 +201,23 @@ class TaskResource extends Resource
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
                         DateTimePicker::make('start_date')
                             ->native(false)
+                            ->timezone($userTimezone)
                             ->required()
-                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? today()),
+                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? now()),
                         DateTimePicker::make('end_date')
                             ->native(false)
+                            ->timezone($userTimezone)
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
                         Placeholder::make('upcoming_run_times')
                             ->content(fn (Get $get): HtmlString => new HtmlString(
                                 '<ul class="list-disc list-inside">'
                                 .implode(
                                     self::getUpcomingRunTimes($get())
-                                        ->map(fn (CarbonImmutable $runTime): string => "<li>{$runTime->toDayDateTimeString()}</li>")
+                                        ->map(
+                                            fn (CarbonImmutable $runTime): string => "<li>
+                                                {$runTime->timezone($userTimezone)->toDayDateTimeString()}
+                                            </li>"
+                                        )
                                         ->toArray()
                                 )
                                 .'</ul>'
@@ -441,7 +449,7 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = new Carbon($data['start_date']);
+        $scheduleStart = Carbon::parse($data['start_date']);
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
