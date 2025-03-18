@@ -232,6 +232,8 @@ class TaskResource extends Resource
 
     public static function table(Table $table, bool $showServer = true): Table
     {
+        $userTimezone = auth()->user()->timezone;
+
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -254,6 +256,7 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('next_run_at')
                     ->dateTime()
+                    ->timezone($userTimezone)
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
@@ -281,14 +284,17 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
                     ->dateTime()
+                    ->timezone($userTimezone)
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
+                    ->timezone($userTimezone)
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                    ->timezone($userTimezone)
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -324,6 +330,8 @@ class TaskResource extends Resource
 
     public static function infolist(Infolist $infolist, bool $showServer = true): Infolist
     {
+        $userTimezone = auth()->user()->timezone;
+
         return $infolist
             ->schema([
                 InfolistSection::make('Task Information')
@@ -355,13 +363,17 @@ class TaskResource extends Resource
                             ->badge(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
+                            ->timezone($userTimezone)
                             ->hidden(fn (Task $record): bool => ! $record->deleted_at),
                         TextEntry::make('created_at')
-                            ->dateTime(),
+                            ->dateTime()
+                            ->timezone($userTimezone),
                         TextEntry::make('updated_at')
-                            ->dateTime(),
+                            ->dateTime()
+                            ->timezone($userTimezone),
                         TextEntry::make('next_run_at')
-                            ->dateTime(),
+                            ->dateTime()
+                            ->timezone($userTimezone),
                     ]),
             ]);
     }
