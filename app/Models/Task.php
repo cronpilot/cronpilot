@@ -7,19 +7,20 @@ use App\Enums\TaskStatus;
 use App\Helpers\Recurrence;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use Error;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Recurr\Frequency;
 use Recurr\Rule;
 use Recurr\Transformer\TextTransformer;
 use Throwable;
 
 /**
  * @method static find(array|bool|string|null $argument)
+ *
  * @property Rule $rrule
  */
 class Task extends Model
@@ -76,8 +77,8 @@ class Task extends Model
         }
 
         try {
-            $translatedRrule = (new TextTransformer())->transform($this->rrule);
-        } catch (Error $e) {
+            $translatedRrule = (new TextTransformer)->transform($this->rrule);
+        } catch (Throwable $e) {
             return 'Custom';
         }
 
@@ -96,6 +97,39 @@ class Task extends Model
     public function getIntervalAttribute(): ?string
     {
         return $this->rrule?->getInterval();
+    }
+
+    public function getByDayAttribute(): ?array
+    {
+        if (! $this->rrule) {
+            return null;
+        }
+
+        $byDay = collect($this->rrule->getByDay());
+
+        if ($byDay->isEmpty()) {
+            return null;
+        }
+
+        if ($this->frequency === Frequency::WEEKLY) {
+            return $byDay->toArray();
+        }
+
+        return $byDay
+            ->map(function (string $byDay): array {
+                preg_match('/^(-?\d+)?([A-Z]{2})$/', $byDay, $matches);
+
+                return [
+                    'ordinal' => $matches[0],
+                    'day' => $matches[1],
+                ];
+            })
+            ->toArray();
+    }
+
+    public function getByMonthDayAttribute(): ?array
+    {
+        return $this->rrule?->getByMonthDay();
     }
 
     public function getStartDateAttribute(): ?Carbon
@@ -143,7 +177,7 @@ class Task extends Model
         $this->next_run_at = $nextOccurrenceTime;
     }
 
-    private function createRecurrence(): null|Recurrence
+    private function createRecurrence(): ?Recurrence
     {
         try {
             return new Recurrence($this->schedule, null);
@@ -153,7 +187,7 @@ class Task extends Model
         }
     }
 
-    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): null|CarbonInterface
+    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): ?CarbonInterface
     {
         return $this->createRecurrence()?->next($time);
     }
