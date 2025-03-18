@@ -40,6 +40,7 @@ class RunResource extends Resource
     public static function table(Table $table, bool $showTask = true): Table
     {
         return $table
+            ->poll('2s')
             ->columns([
                 TextColumn::make('task.name')
                     ->icon(TaskResource::ICON)

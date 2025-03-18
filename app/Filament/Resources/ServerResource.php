@@ -73,7 +73,6 @@ class ServerResource extends Resource
                     ->toggleable(),
                 TextColumn::make('ssh_port')
                     ->label('SSH port')
-                    ->numeric()
                     ->badge()
                     ->sortable()
                     ->toggleable(),
