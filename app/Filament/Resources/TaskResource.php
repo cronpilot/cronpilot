@@ -441,7 +441,7 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = new Carbon($data['start_date']);
+        $scheduleStart = max(new Carbon($data['start_date']), now());
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
