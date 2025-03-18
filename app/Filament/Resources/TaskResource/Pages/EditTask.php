@@ -23,6 +23,14 @@ class EditTask extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['start_date'] = $this->record->startDate;
+        $data['end_date'] = $this->record->endDate;
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         return TaskResource::mutateFormData($data);

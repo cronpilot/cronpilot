@@ -138,7 +138,7 @@ class Task extends Model
             return null;
         }
 
-        return new Carbon($this->rrule->getStartDate());
+        return new Carbon($this->rrule->getStartDate(), auth()->user()->timezone);
     }
 
     public function scopeReadyToRun(Builder $query): void
@@ -154,7 +154,7 @@ class Task extends Model
             return null;
         }
 
-        return new Carbon($this->rrule->getEndDate());
+        return new Carbon($this->rrule->getEndDate(), auth()->user()->timezone);
     }
 
     public function getLastRunStatusAttribute(): ?RunStatus

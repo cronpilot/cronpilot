@@ -198,12 +198,9 @@ class TaskResource extends Resource
                             )
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
                         DateTimePicker::make('start_date')
-                            ->native(false)
-                            ->required()
-                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? now()),
+                            ->native(false),
                         DateTimePicker::make('end_date')
-                            ->native(false)
-                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
+                            ->native(false),
                         Placeholder::make('upcoming_run_times')
                             ->content(fn (Get $get): HtmlString => new HtmlString(
                                 '<ul class="list-disc list-inside">'
@@ -211,7 +208,7 @@ class TaskResource extends Resource
                                     self::getUpcomingRunTimes($get())
                                         ->map(
                                             fn (CarbonImmutable $runTime): string => "<li>
-                                                {$runTime->timezone(self::getUserTimezone())->toDayDateTimeString()}
+                                                {$runTime->toDayDateTimeString()}
                                             </li>"
                                         )
                                         ->toArray()
@@ -410,9 +407,13 @@ class TaskResource extends Resource
     private static function getRrule(array $data): Rule
     {
         $rrule = (new Rule)
+            ->setTimezone(self::getUserTimezone())
             ->setFreq((int) $data['frequency'])
-            ->setInterval($data['interval'])
-            ->setStartDate(new Carbon($data['start_date']), true);
+            ->setInterval($data['interval']);
+
+        if ($data['start_date']) {
+            $rrule->setStartDate(Carbon::parse($data['start_date'], self::getUserTimezone()), true);
+        }
 
         switch ((int) $data['frequency']) {
             case Frequency::WEEKLY:
@@ -443,7 +444,7 @@ class TaskResource extends Resource
         }
 
         if ($data['end_date']) {
-            $rrule->setEndDate(new Carbon($data['end_date']));
+            $rrule->setEndDate(Carbon::parse($data['end_date'], self::getUserTimezone()));
         }
 
         return $rrule;
@@ -453,17 +454,17 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = max(new Carbon($data['start_date']), now());
+        $scheduleStart = $data['start_date'] ? Carbon::parse($data['start_date'], self::getUserTimezone()) : today(self::getUserTimezone());
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
-        $lastRunTime = $scheduleStart->subSecond();
+        $lastRunTime = max($scheduleStart->subSecond(), now(self::getUserTimezone())->subSecond());
 
         $upcomingRunTimes = collect();
 
         for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime);
+                $lastRunTime = $scheduler->next($lastRunTime)->timezone(self::getUserTimezone());
 
                 $upcomingRunTimes->push($lastRunTime);
             }
