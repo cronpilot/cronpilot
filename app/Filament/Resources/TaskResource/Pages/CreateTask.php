@@ -9,7 +9,7 @@ class CreateTask extends CreateRecord
 {
     protected static string $resource = TaskResource::class;
 
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function mutateFormDataBeforeCreate(array $data): array
     {
         return TaskResource::mutateFormData($data);
     }
