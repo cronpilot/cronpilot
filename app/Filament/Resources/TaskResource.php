@@ -199,12 +199,10 @@ class TaskResource extends Resource
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
                         DateTimePicker::make('start_date')
                             ->native(false)
-                            ->timezone(self::getUserTimezone())
                             ->required()
                             ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? now()),
                         DateTimePicker::make('end_date')
                             ->native(false)
-                            ->timezone(self::getUserTimezone())
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
                         Placeholder::make('upcoming_run_times')
                             ->content(fn (Get $get): HtmlString => new HtmlString(
@@ -258,7 +256,7 @@ class TaskResource extends Resource
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
                     ->limit(30)
-                    ->sortable()
+                    ->sortable(query: fn (Builder $query): Builder => $query->orderBy('schedule'))
                     ->toggleable(),
                 TextColumn::make('server.name')
                     ->placeholder('No server')
