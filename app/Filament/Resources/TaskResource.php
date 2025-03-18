@@ -62,8 +62,6 @@ class TaskResource extends Resource
 
     public static function form(Form $form, bool $serverSelect = true): Form
     {
-        $userTimezone = auth()->user()->timezone;
-
         return $form
             ->schema([
                 FormSection::make('Task Information')
@@ -201,12 +199,12 @@ class TaskResource extends Resource
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
                         DateTimePicker::make('start_date')
                             ->native(false)
-                            ->timezone($userTimezone)
+                            ->timezone(self::getUserTimezone())
                             ->required()
                             ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? now()),
                         DateTimePicker::make('end_date')
                             ->native(false)
-                            ->timezone($userTimezone)
+                            ->timezone(self::getUserTimezone())
                             ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
                         Placeholder::make('upcoming_run_times')
                             ->content(fn (Get $get): HtmlString => new HtmlString(
@@ -215,7 +213,7 @@ class TaskResource extends Resource
                                     self::getUpcomingRunTimes($get())
                                         ->map(
                                             fn (CarbonImmutable $runTime): string => "<li>
-                                                {$runTime->timezone($userTimezone)->toDayDateTimeString()}
+                                                {$runTime->timezone(self::getUserTimezone())->toDayDateTimeString()}
                                             </li>"
                                         )
                                         ->toArray()
@@ -232,8 +230,6 @@ class TaskResource extends Resource
 
     public static function table(Table $table, bool $showServer = true): Table
     {
-        $userTimezone = auth()->user()->timezone;
-
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -256,7 +252,7 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('next_run_at')
                     ->dateTime()
-                    ->timezone($userTimezone)
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
@@ -284,17 +280,17 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
                     ->dateTime()
-                    ->timezone($userTimezone)
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->timezone($userTimezone)
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->dateTime()
-                    ->timezone($userTimezone)
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -330,8 +326,6 @@ class TaskResource extends Resource
 
     public static function infolist(Infolist $infolist, bool $showServer = true): Infolist
     {
-        $userTimezone = auth()->user()->timezone;
-
         return $infolist
             ->schema([
                 InfolistSection::make('Task Information')
@@ -363,17 +357,17 @@ class TaskResource extends Resource
                             ->badge(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->timezone($userTimezone)
+                            ->timezone(self::getUserTimezone())
                             ->hidden(fn (Task $record): bool => ! $record->deleted_at),
                         TextEntry::make('created_at')
                             ->dateTime()
-                            ->timezone($userTimezone),
+                            ->timezone(self::getUserTimezone()),
                         TextEntry::make('updated_at')
                             ->dateTime()
-                            ->timezone($userTimezone),
+                            ->timezone(self::getUserTimezone()),
                         TextEntry::make('next_run_at')
                             ->dateTime()
-                            ->timezone($userTimezone),
+                            ->timezone(self::getUserTimezone()),
                     ]),
             ]);
     }
@@ -478,5 +472,10 @@ class TaskResource extends Resource
         }
 
         return $upcomingRunTimes;
+    }
+
+    private static function getUserTimezone(): string
+    {
+        return auth()->user()->timezone;
     }
 }
