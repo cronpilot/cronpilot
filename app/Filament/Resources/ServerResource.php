@@ -57,7 +57,6 @@ class ServerResource extends Resource
                     ->toggleable(),
                 TextColumn::make('ssh_port')
                     ->label('SSH port')
-                    ->numeric()
                     ->badge()
                     ->sortable()
                     ->toggleable(),
@@ -113,7 +112,6 @@ class ServerResource extends Resource
                     TextEntry::make('name'),
                     TextEntry::make('ssh_port')
                         ->label('SSH port')
-                        ->numeric()
                         ->badge(),
                     TextEntry::make('hostname')
                         ->columnSpanFull()
