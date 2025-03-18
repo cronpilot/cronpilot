@@ -14,11 +14,12 @@ use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Helpers\Recurrence;
 use App\Models\Task;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -121,7 +122,7 @@ class TaskResource extends Resource
                                 Frequency::WEEKLY => 'week',
                                 Frequency::MONTHLY => 'month',
                                 Frequency::YEARLY => 'year',
-                            } . '(s)')
+                            }.'(s)')
                             ->integer()
                             ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                             ->required(),
@@ -208,7 +209,7 @@ class TaskResource extends Resource
                                 '<ul class="list-disc list-inside">'
                                 .implode(
                                     self::getUpcomingRunTimes($get())
-                                        ->map(fn (string $runTime): string => "<li>{$runTime}</li>")
+                                        ->map(fn (CarbonImmutable $runTime): string => "<li>{$runTime->toDayDateTimeString()}</li>")
                                         ->toArray()
                                 )
                                 .'</ul>'
@@ -385,9 +386,11 @@ class TaskResource extends Resource
 
     public static function mutateFormData(array $data): array
     {
-        $data['schedule'] = $data['has_schedule']
-            ? self::getRrule($data)->getString()
-            : null;
+        if ($data['has_schedule']) {
+            $data['schedule'] = self::getRrule($data)->getString();
+
+            $data['next_run_at'] = self::getUpcomingRunTimes($data, 1)->first();
+        }
 
         return $data;
     }
@@ -434,7 +437,7 @@ class TaskResource extends Resource
         return $rrule;
     }
 
-    private static function getUpcomingRunTimes(array $data): Collection
+    private static function getUpcomingRunTimes(array $data, int $count = 3): Collection
     {
         $schedule = self::getRrule($data)->getString();
 
@@ -446,11 +449,11 @@ class TaskResource extends Resource
 
         $upcomingRunTimes = collect();
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
                 $lastRunTime = $scheduler->next($lastRunTime);
 
-                $upcomingRunTimes->push($lastRunTime->toDayDateTimeString());
+                $upcomingRunTimes->push($lastRunTime);
             }
         }
 
