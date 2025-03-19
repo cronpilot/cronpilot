@@ -92,21 +92,17 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('email_verified_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable(),
                 TextColumn::make('deleted_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -151,18 +147,14 @@ class UserResource extends Resource
                     Group::make()
                         ->schema([
                             TextEntry::make('email_verified_at')
-                                ->datetime()
-                                ->timezone(self::getUserTimezone()),
+                                ->datetime(),
                             TextEntry::make('deleted_at')
                                 ->hidden(fn (User $record): bool => ! $record->deleted_at)
-                                ->datetime()
-                                ->timezone(self::getUserTimezone()),
+                                ->datetime(),
                             TextEntry::make('created_at')
-                                ->datetime()
-                                ->timezone(self::getUserTimezone()),
+                                ->datetime(),
                             TextEntry::make('updated_at')
-                                ->datetime()
-                                ->timezone(self::getUserTimezone()),
+                                ->datetime(),
                         ]),
                 ]),
         ];
@@ -183,10 +175,5 @@ class UserResource extends Resource
             'view' => ViewUser::route('/{record}'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
-    }
-
-    private static function getUserTimezone(): string
-    {
-        return auth()->user()->timezone;
     }
 }

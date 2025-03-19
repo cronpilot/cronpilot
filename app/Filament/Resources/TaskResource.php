@@ -207,7 +207,7 @@ class TaskResource extends Resource
                             TimezoneSelect::make('timezone')
                                 ->native(false)
                                 ->searchable()
-                                ->formatStateUsing(fn (?Task $record): string => $record->timezone ?? self::getUserTimezone()),
+                                ->formatStateUsing(fn (?Task $record): string => $record->timezone ?? auth()->user()->timezone),
                         ])
                             ->columns(3),
                         Placeholder::make('upcoming_run_times')
@@ -278,17 +278,14 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
                     ->dateTime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->dateTime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -365,15 +362,12 @@ class TaskResource extends Resource
                             ->label('Next run at'),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->timezone(self::getUserTimezone())
                             ->hiddenLabel(fn (Task $record): bool => ! $record->deleted_at)
                             ->placeholder(''),
                         TextEntry::make('created_at')
-                            ->dateTime()
-                            ->timezone(self::getUserTimezone()),
+                            ->dateTime(),
                         TextEntry::make('updated_at')
-                            ->dateTime()
-                            ->timezone(self::getUserTimezone()),
+                            ->dateTime(),
                     ]),
             ]);
     }
@@ -484,10 +478,5 @@ class TaskResource extends Resource
         }
 
         return $upcomingRunTimes;
-    }
-
-    private static function getUserTimezone(): string
-    {
-        return auth()->user()->timezone;
     }
 }

@@ -85,17 +85,14 @@ class ServerResource extends Resource
                     ->toggleable(),
                 TextColumn::make('deleted_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->datetime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -133,14 +130,11 @@ class ServerResource extends Resource
                             ->label('Hostname'),
                         TextEntry::make('deleted_at')
                             ->datetime()
-                            ->timezone(self::getUserTimezone())
                             ->hidden(fn (Server $record): bool => ! $record->deleted_at),
                         TextEntry::make('created_at')
-                            ->datetime()
-                            ->timezone(self::getUserTimezone()),
+                            ->datetime(),
                         TextEntry::make('updated_at')
-                            ->datetime()
-                            ->timezone(self::getUserTimezone()),
+                            ->datetime(),
                     ]),
             ]);
     }
@@ -168,10 +162,5 @@ class ServerResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
-    }
-
-    private static function getUserTimezone(): string
-    {
-        return auth()->user()->timezone;
     }
 }
