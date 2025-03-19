@@ -16,10 +16,11 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section as FormSection;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,6 +32,7 @@ use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
@@ -50,6 +52,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Recurr\Frequency;
 use Recurr\Rule;
+use Tapp\FilamentTimezoneField\Forms\Components\TimezoneSelect;
 
 class TaskResource extends Resource
 {
@@ -65,7 +68,7 @@ class TaskResource extends Resource
     {
         return $form
             ->schema([
-                FormSection::make('Task Information')
+                Section::make('Task Information')
                     ->icon(self::ICON)
                     ->columns(2)
                     ->schema([
@@ -94,39 +97,41 @@ class TaskResource extends Resource
                             ->live()
                             ->columnSpanFull(),
                     ]),
-                FormSection::make('Schedule')
+                Section::make('Schedule')
                     ->icon('tabler-clock')
-                    ->columns(2)
                     ->visible(fn (Get $get): bool => (bool) $get('has_schedule'))
                     ->live()
                     ->schema([
-                        Select::make('frequency')
-                            ->options([
-                                Frequency::SECONDLY => 'Secondly',
-                                Frequency::MINUTELY => 'Minutely',
-                                Frequency::HOURLY => 'Hourly',
-                                Frequency::DAILY => 'Daily',
-                                Frequency::WEEKLY => 'Weekly',
-                                Frequency::MONTHLY => 'Monthly',
-                                Frequency::YEARLY => 'Yearly',
-                            ])
-                            ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
-                            ->required()
-                            ->native(false),
-                        TextInput::make('interval')
-                            ->prefix('Every')
-                            ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
-                                Frequency::SECONDLY => 'second',
-                                Frequency::MINUTELY => 'minute',
-                                Frequency::HOURLY => 'hour',
-                                Frequency::DAILY => 'day',
-                                Frequency::WEEKLY => 'week',
-                                Frequency::MONTHLY => 'month',
-                                Frequency::YEARLY => 'year',
-                            }.'(s)')
-                            ->integer()
-                            ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
-                            ->required(),
+                        Group::make([
+                            Select::make('frequency')
+                                ->options([
+                                    Frequency::SECONDLY => 'Secondly',
+                                    Frequency::MINUTELY => 'Minutely',
+                                    Frequency::HOURLY => 'Hourly',
+                                    Frequency::DAILY => 'Daily',
+                                    Frequency::WEEKLY => 'Weekly',
+                                    Frequency::MONTHLY => 'Monthly',
+                                    Frequency::YEARLY => 'Yearly',
+                                ])
+                                ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
+                                ->required()
+                                ->native(false),
+                            TextInput::make('interval')
+                                ->prefix('Every')
+                                ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
+                                    Frequency::SECONDLY => 'second',
+                                    Frequency::MINUTELY => 'minute',
+                                    Frequency::HOURLY => 'hour',
+                                    Frequency::DAILY => 'day',
+                                    Frequency::WEEKLY => 'week',
+                                    Frequency::MONTHLY => 'month',
+                                    Frequency::YEARLY => 'year',
+                                }.'(s)')
+                                ->integer()
+                                ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
+                                ->required(),
+                        ])
+                            ->columns(2),
                         Radio::make('by')
                             ->hiddenLabel()
                             ->options(fn (Get $get): array => match ((int) $get('frequency')) {
@@ -149,15 +154,13 @@ class TaskResource extends Resource
                             ->visible(fn (Get $get): bool => in_array($get('frequency'), [
                                 Frequency::WEEKLY,
                                 Frequency::MONTHLY,
-                            ]))
-                            ->columnSpanFull(),
+                            ])),
                         Select::make('by_day_weekly')
                             ->multiple()
                             ->label('Days')
                             ->options(Day::class)
                             ->required()
                             ->formatStateUsing(fn (?Task $record): array => $record?->byDay ?? [])
-                            ->columnSpanFull()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY && $get('by') === 'day'),
                         Select::make('by_month_day')
                             ->multiple()
@@ -165,7 +168,6 @@ class TaskResource extends Resource
                             ->options(range(1, 31))
                             ->required()
                             ->formatStateUsing(fn (?Task $record): array => $record?->byMonthDay ?? [])
-                            ->columnSpanFull()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'month_day'),
                         Repeater::make('by_day_monthly')
                             ->schema([
@@ -188,7 +190,6 @@ class TaskResource extends Resource
                             ->hiddenLabel()
                             ->required()
                             ->columns(2)
-                            ->columnSpanFull()
                             ->reorderable(false)
                             ->formatStateUsing(fn (?Task $record): array => $record?->frequency === Frequency::MONTHLY && $record?->byDay
                                 ? $record->byDay
@@ -198,28 +199,31 @@ class TaskResource extends Resource
                                 ]]
                             )
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
-                        DateTimePicker::make('start_date')
-                            ->native(false),
-                        DateTimePicker::make('end_date')
-                            ->native(false),
+                        Group::make([
+                            DateTimePicker::make('start_date')
+                                ->native(false),
+                            DateTimePicker::make('end_date')
+                                ->native(false),
+                            TimezoneSelect::make('timezone')
+                                ->native(false)
+                                ->searchable()
+                                ->formatStateUsing(fn (?Task $record): string => $record->timezone ?? self::getUserTimezone()),
+                        ])
+                            ->columns(3),
                         Placeholder::make('upcoming_run_times')
                             ->content(fn (Get $get): HtmlString => new HtmlString(
                                 '<ul class="list-disc list-inside">'
                                 .implode(
                                     self::getUpcomingRunTimes($get())
                                         ->map(
-                                            fn (CarbonImmutable $runTime): string => "<li>
-                                                {$runTime->toDayDateTimeString()}
-                                            </li>"
+                                            fn (CarbonImmutable $runTime): string => "<li>{$runTime->format('l, F j, Y g:i A T')}</li>"
                                         )
                                         ->toArray()
                                 )
                                 .'</ul>'
-                            ))
-                            ->columnSpanFull(),
+                            )),
                         Placeholder::make('rrule_preview')
-                            ->content(fn (Get $get): string => self::getRrule($get())->getString())
-                            ->columnSpanFull(),
+                            ->content(fn (Get $get): string => self::getRrule($get())->getString()),
                     ]),
             ]);
     }
@@ -248,8 +252,7 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('nextRunAtWithTimezone')
                     ->label('Next run at')
-                    ->dateTime()
-                    ->sortable()
+                    ->sortable(fn (Builder $query): Builder => $query->orderBy('next_run_at'))
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
@@ -332,9 +335,13 @@ class TaskResource extends Resource
                         TextEntry::make('name'),
                         TextEntry::make('status')
                             ->badge(),
-                        Card::make('Description')
+                        TextEntry::make('description')
+                            ->color('gray')
+                            ->columnSpanFull(),
+                        Card::make('Command')
                             ->schema([
-                                TextEntry::make('description')
+                                TextEntry::make('command')
+                                    ->fontFamily(FontFamily::Mono)
                                     ->hiddenLabel(),
                             ]),
                         TextEntry::make('server.name')
@@ -355,8 +362,7 @@ class TaskResource extends Resource
                         TextEntry::make('lastRunStatus')
                             ->badge(),
                         TextEntry::make('nextRunAtWithTimezone')
-                            ->label('Next run at')
-                            ->dateTime(),
+                            ->label('Next run at'),
                         TextEntry::make('deleted_at')
                             ->dateTime()
                             ->timezone(self::getUserTimezone())
@@ -412,12 +418,11 @@ class TaskResource extends Resource
     private static function getRrule(array $data): Rule
     {
         $rrule = (new Rule)
-            ->setTimezone(self::getUserTimezone())
             ->setFreq((int) $data['frequency'])
             ->setInterval($data['interval']);
 
         if ($data['start_date']) {
-            $rrule->setStartDate(Carbon::parse($data['start_date'], self::getUserTimezone()), true);
+            $rrule->setStartDate(Carbon::parse($data['start_date']), true);
         }
 
         switch ((int) $data['frequency']) {
@@ -449,7 +454,7 @@ class TaskResource extends Resource
         }
 
         if ($data['end_date']) {
-            $rrule->setEndDate(Carbon::parse($data['end_date'], self::getUserTimezone()));
+            $rrule->setEndDate(Carbon::parse($data['end_date']));
         }
 
         return $rrule;
@@ -459,17 +464,17 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = $data['start_date'] ? Carbon::parse($data['start_date'], self::getUserTimezone()) : today(self::getUserTimezone());
+        $scheduleStart = $data['start_date'] ? Carbon::parse($data['start_date']) : today();
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
-        $lastRunTime = max($scheduleStart->subSecond(), now(self::getUserTimezone())->subSecond());
+        $lastRunTime = max($scheduleStart->subSecond(), now()->subSecond());
 
         $upcomingRunTimes = collect();
 
         for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime)->timezone(self::getUserTimezone());
+                $lastRunTime = $scheduler->next($lastRunTime)->shiftTimezone($data['timezone']);
 
                 $upcomingRunTimes->push($lastRunTime);
             }

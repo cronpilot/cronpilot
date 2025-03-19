@@ -172,9 +172,9 @@ class Task extends Model
             return null;
         }
 
-        $nextRunAt = new Carbon($this->next_run_at);
+        $nextRunAt = Carbon::parse($this->next_run_at)->shiftTimezone($this->timezone);
 
-        return "{$nextRunAt->toDayDateTimeString()} {$this->timezone}";
+        return $nextRunAt->format('l, F j, Y g:i A T');
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
