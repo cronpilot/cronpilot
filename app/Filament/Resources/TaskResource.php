@@ -13,7 +13,6 @@ use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManag
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Helpers\Recurrence;
 use App\Models\Task;
-use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Group;
@@ -210,18 +209,20 @@ class TaskResource extends Resource
                                 ->formatStateUsing(fn (?Task $record): string => $record->timezone ?? auth()->user()->timezone),
                         ])
                             ->columns(3),
-                        Placeholder::make('upcoming_run_times')
-                            ->content(fn (Get $get): HtmlString => new HtmlString(
-                                '<ul class="list-disc list-inside">'
-                                .implode(
-                                    self::getUpcomingRunTimes($get())
-                                        ->map(
-                                            fn (CarbonImmutable $runTime): string => "<li>{$runTime->format('l, F j, Y g:i A T')}</li>"
-                                        )
-                                        ->toArray()
-                                )
-                                .'</ul>'
-                            )),
+                        Group::make([
+                            Placeholder::make('upcoming_run_times_task_timezone')
+                                ->label(fn (Get $get): string => "Upcoming run times ({$get('timezone')})")
+                                ->content(fn (Get $get): HtmlString => self::getUpcomingRunTimesHTMLList($get(), $get('timezone'))),
+                            Placeholder::make('upcoming_run_times_user_timezone')
+                                ->label(function (Get $get): string {
+                                    $userTimezone = auth()->user()->timezone;
+
+                                    return "Upcoming run times ({$userTimezone})";
+                                })
+                                ->content(fn (Get $get): HtmlString => self::getUpcomingRunTimesHTMLList($get(), auth()->user()->timezone))
+                                ->visible(fn (Get $get): bool => $get('timezone') !== auth()->user()->timezone),
+                        ])
+                            ->columns(2),
                         Placeholder::make('rrule_preview')
                             ->content(fn (Get $get): string => self::getRrule($get())->getString()),
                     ]),
@@ -418,7 +419,7 @@ class TaskResource extends Resource
             ->setInterval($data['interval']);
 
         if ($data['start_date']) {
-            $rrule->setStartDate(Carbon::parse($data['start_date']), true);
+            $rrule->setStartDate(CarbonImmutable::parse($data['start_date']), true);
         }
 
         switch ((int) $data['frequency']) {
@@ -450,7 +451,7 @@ class TaskResource extends Resource
         }
 
         if ($data['end_date']) {
-            $rrule->setEndDate(Carbon::parse($data['end_date']));
+            $rrule->setEndDate(CarbonImmutable::parse($data['end_date']));
         }
 
         return $rrule;
@@ -460,8 +461,11 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = $data['start_date'] ? Carbon::parse($data['start_date']) : today();
-        $scheduleEnd = $data['end_date'] ? Carbon::parse($data['end_date']) : null;
+        $scheduleStart = $data['start_date'] ? CarbonImmutable::parse($data['start_date']) : today();
+        $scheduleEnd = $data['end_date'] ? CarbonImmutable::parse($data['end_date']) : null;
+
+        $scheduleStart->shiftTimezone($data['timezone']);
+        $scheduleEnd?->shiftTimezone($data['timezone']);
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
@@ -480,5 +484,20 @@ class TaskResource extends Resource
         }
 
         return $upcomingRunTimes;
+    }
+
+    private static function getUpcomingRunTimesHTMLList(array $data, string $timezone, int $count = 3): HtmlString
+    {
+        return new HtmlString(
+            '<ul class="list-disc list-inside">'
+            .implode(
+                self::getUpcomingRunTimes($data, $count)
+                    ->map(
+                        fn (CarbonImmutable $runTime): string => "<li>{$runTime->timezone($timezone)->toDayDateTimeString()}</li>"
+                    )
+                    ->toArray()
+            )
+            .'</ul>'
+        );
     }
 }
