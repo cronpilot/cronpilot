@@ -53,8 +53,7 @@ class ServerResource extends Resource
                             ->maxLength(255),
                         TextInput::make('ssh_port')
                             ->default(22)
-                            ->required()
-                            ->numeric(),
+                            ->required(),
                     ]),
             ]);
     }
@@ -123,7 +122,6 @@ class ServerResource extends Resource
                         TextEntry::make('name'),
                         TextEntry::make('ssh_port')
                             ->label('SSH port')
-                            ->numeric()
                             ->badge(),
                         TextEntry::make('hostname')
                             ->columnSpanFull()
