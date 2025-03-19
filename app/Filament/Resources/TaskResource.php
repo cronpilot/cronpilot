@@ -474,9 +474,11 @@ class TaskResource extends Resource
 
         for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime)->shiftTimezone($data['timezone']);
+                $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($data['timezone']);
 
-                $upcomingRunTimes->push($lastRunTime);
+                if ($lastRunTime) {
+                    $upcomingRunTimes->push($lastRunTime);
+                }
             }
         }
 
