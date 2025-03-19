@@ -139,28 +139,6 @@ class Task extends Model
         return $this->rrule?->getByMonthDay();
     }
 
-    public function getStartDateAttribute(): ?CarbonImmutable
-    {
-        $startDate = $this->rrule?->getStartDate();
-
-        if (! $startDate) {
-            return null;
-        }
-
-        return CarbonImmutable::parse($startDate);
-    }
-
-    public function getEndDateAttribute(): ?CarbonImmutable
-    {
-        $endDate = $this->rrule?->getEndDate();
-
-        if (! $endDate) {
-            return null;
-        }
-
-        return CarbonImmutable::parse($endDate);
-    }
-
     public function getLastRunStatusAttribute(): ?RunStatus
     {
         return $this->runs
