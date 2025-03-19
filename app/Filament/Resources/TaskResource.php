@@ -260,6 +260,11 @@ class TaskResource extends Resource
                     ->label('Schedule')
                     ->limit(30)
                     ->toggleable(),
+                TextColumn::make('command')
+                    ->fontFamily(FontFamily::Mono)
+                    ->limit(30)
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('server.name')
                     ->placeholder('No server')
                     ->icon(ServerResource::ICON)
