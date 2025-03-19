@@ -159,7 +159,11 @@ class Task extends Model
 
     public function getLastRunStatusAttribute(): ?RunStatus
     {
-        return $this->runs()->latest()->first(['status'])?->status;
+        return $this->runs
+            ->where('status', '!=', RunStatus::RUNNING)
+            ->sortBy('created_at')
+            ->first()
+            ?->status;
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void

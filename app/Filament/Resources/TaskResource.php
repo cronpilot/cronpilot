@@ -289,6 +289,7 @@ class TaskResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('runs'))
             ->filters([
                 SelectFilter::make('server')
                     ->relationship('server', 'name')
