@@ -214,7 +214,7 @@ class TaskResource extends Resource
                                 ->label(fn (Get $get): string => "Upcoming run times ({$get('timezone')})")
                                 ->content(fn (Get $get): HtmlString => self::getUpcomingRunTimesHTMLList($get(), $get('timezone'))),
                             Placeholder::make('upcoming_run_times_user_timezone')
-                                ->label(function (Get $get): string {
+                                ->label(function (): string {
                                     $userTimezone = auth()->user()->timezone;
 
                                     return "Upcoming run times ({$userTimezone})";
