@@ -465,6 +465,7 @@ class TaskResource extends Resource
         $schedule = self::getRrule($data)->getString();
 
         $scheduleStart = $data['start_date'] ? Carbon::parse($data['start_date']) : today();
+        $scheduleEnd = $data['end_date'] ? Carbon::parse($data['end_date']) : null;
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
@@ -476,7 +477,7 @@ class TaskResource extends Resource
             if ($lastRunTime) {
                 $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($data['timezone']);
 
-                if ($lastRunTime) {
+                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
                     $upcomingRunTimes->push($lastRunTime);
                 }
             }
