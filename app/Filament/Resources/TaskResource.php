@@ -365,9 +365,10 @@ class TaskResource extends Resource
                             ->label('Schedule'),
                         TextEntry::make('lastRunStatus')
                             ->badge(),
-                        TextEntry::make('nextRunAtCarbon')
-                            ->label('Next run at')
-                            ->dateTime(),
+                        TextEntry::make('upcomingRunTimes')
+                            ->dateTime()
+                            ->listWithLineBreaks()
+                            ->bulleted(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
                             ->hiddenLabel(fn (Task $record): bool => ! $record->deleted_at)

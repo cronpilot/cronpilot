@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Filament\Resources\TaskResource;
-use Carbon\CarbonImmutable;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -26,13 +25,8 @@ class EditTask extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['start_date'] = $this->record->rrule?->getStartDate()
-            ? new CarbonImmutable($this->record->rrule->getStartDate())
-            : null;
-
-        $data['end_date'] = $this->record->rrule?->getEndDate()
-            ? new CarbonImmutable($this->record->rrule->getEndDate())
-            : null;
+        $data['start_date'] = $this->record->startDate;
+        $data['end_date'] = $this->record->endDate;
 
         return $data;
     }

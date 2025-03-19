@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Recurr\Frequency;
 use Recurr\Rule;
 use Recurr\Transformer\TextTransformer;
@@ -139,6 +140,24 @@ class Task extends Model
         return $this->rrule?->getByMonthDay();
     }
 
+    public function getStartDateAttribute(): ?CarbonImmutable
+    {
+        if (! $this->rrule?->getStartDate()) {
+            return null;
+        }
+
+        return new CarbonImmutable($this->rrule->getStartDate());
+    }
+
+    public function getEndDateAttribute(): ?CarbonImmutable
+    {
+        if (! $this->rrule?->getEndDate()) {
+            return null;
+        }
+
+        return new CarbonImmutable($this->rrule->getEndDate());
+    }
+
     public function getLastRunStatusAttribute(): ?RunStatus
     {
         return $this->runs
@@ -155,6 +174,33 @@ class Task extends Model
         }
 
         return CarbonImmutable::parse($this->next_run_at)->shiftTimezone($this->timezone);
+    }
+
+    public function getUpcomingRunTimesAttribute(): Collection
+    {
+        $scheduleStart = $this->startDate?->copy() ?? today();
+        $scheduleEnd = $this->endDate?->copy();
+
+        $scheduleStart->shiftTimezone($this->timezone);
+        $scheduleEnd?->shiftTimezone($this->timezone);
+
+        $scheduler = new Recurrence($this->schedule, $scheduleStart);
+
+        $lastRunTime = max($scheduleStart->subSecond(), now()->subSecond());
+
+        $upcomingRunTimes = collect();
+
+        for ($i = 0; $i < 3; $i++) {
+            if ($lastRunTime) {
+                $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($this->timezone);
+
+                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
+                    $upcomingRunTimes->push($lastRunTime);
+                }
+            }
+        }
+
+        return $upcomingRunTimes;
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
