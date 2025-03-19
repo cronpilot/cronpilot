@@ -166,6 +166,17 @@ class Task extends Model
             ?->status;
     }
 
+    public function getNextRunAtWithTimezoneAttribute(): ?string
+    {
+        if (! $this->next_run_at) {
+            return null;
+        }
+
+        $nextRunAt = new Carbon($this->next_run_at);
+
+        return "{$nextRunAt->toDayDateTimeString()} {$this->timezone}";
+    }
+
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
     {
         $nextOccurrenceTime = $this->calculateNextOccurrenceAfterDate($lastOccurrenceTime);

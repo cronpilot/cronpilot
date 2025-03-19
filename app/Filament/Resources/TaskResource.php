@@ -26,6 +26,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists\Components\Card;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -245,9 +246,9 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('next_run_at')
+                TextColumn::make('nextRunAtWithTimezone')
+                    ->label('Next run at')
                     ->dateTime()
-                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
@@ -331,9 +332,11 @@ class TaskResource extends Resource
                         TextEntry::make('name'),
                         TextEntry::make('status')
                             ->badge(),
-                        TextEntry::make('description')
-                            ->columnSpanFull()
-                            ->color('gray'),
+                        Card::make('Description')
+                            ->schema([
+                                TextEntry::make('description')
+                                    ->hiddenLabel(),
+                            ]),
                         TextEntry::make('server.name')
                             ->placeholder('No server')
                             ->icon(ServerResource::ICON)
@@ -351,17 +354,18 @@ class TaskResource extends Resource
                             ->label('Schedule'),
                         TextEntry::make('lastRunStatus')
                             ->badge(),
+                        TextEntry::make('nextRunAtWithTimezone')
+                            ->label('Next run at')
+                            ->dateTime(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
                             ->timezone(self::getUserTimezone())
-                            ->hidden(fn (Task $record): bool => ! $record->deleted_at),
+                            ->hiddenLabel(fn (Task $record): bool => ! $record->deleted_at)
+                            ->placeholder(''),
                         TextEntry::make('created_at')
                             ->dateTime()
                             ->timezone(self::getUserTimezone()),
                         TextEntry::make('updated_at')
-                            ->dateTime()
-                            ->timezone(self::getUserTimezone()),
-                        TextEntry::make('next_run_at')
                             ->dateTime()
                             ->timezone(self::getUserTimezone()),
                     ]),
