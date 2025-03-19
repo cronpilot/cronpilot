@@ -250,8 +250,9 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('nextRunAtWithTimezone')
+                TextColumn::make('nextRunAtCarbon')
                     ->label('Next run at')
+                    ->dateTime()
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('next_run_at', $direction))
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
@@ -358,8 +359,9 @@ class TaskResource extends Resource
                             ->label('Schedule'),
                         TextEntry::make('lastRunStatus')
                             ->badge(),
-                        TextEntry::make('nextRunAtWithTimezone')
-                            ->label('Next run at'),
+                        TextEntry::make('nextRunAtCarbon')
+                            ->label('Next run at')
+                            ->dateTime(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
                             ->hiddenLabel(fn (Task $record): bool => ! $record->deleted_at)

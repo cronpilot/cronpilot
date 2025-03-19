@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
 use App\Helpers\Recurrence;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -59,6 +59,13 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function scopeReadyToRun(Builder $query): void
+    {
+        $query->where('next_run_at', '<=', now())
+            ->where('status', '!=', TaskStatus::DISABLED)
+            ->where('paused', '!=', true);
     }
 
     public function getRruleAttribute(): ?Rule
@@ -132,29 +139,26 @@ class Task extends Model
         return $this->rrule?->getByMonthDay();
     }
 
-    public function getStartDateAttribute(): ?Carbon
+    public function getStartDateAttribute(): ?CarbonImmutable
     {
-        if (! $this->rrule?->getStartDate()) {
+        $startDate = $this->rrule?->getStartDate();
+
+        if (! $startDate) {
             return null;
         }
 
-        return new Carbon($this->rrule->getStartDate(), auth()->user()->timezone);
+        return CarbonImmutable::parse($startDate)->shiftTimezone($this->timezone ?? 'UTC');
     }
 
-    public function scopeReadyToRun(Builder $query): void
+    public function getEndDateAttribute(): ?CarbonImmutable
     {
-        $query->where('next_run_at', '<=', now())
-            ->where('status', '!=', TaskStatus::DISABLED)
-            ->where('paused', '!=', true);
-    }
+        $endDate = $this->rrule?->getEndDate();
 
-    public function getEndDateAttribute(): ?Carbon
-    {
-        if (! $this->rrule?->getEndDate()) {
+        if (! $endDate) {
             return null;
         }
 
-        return new Carbon($this->rrule->getEndDate(), auth()->user()->timezone);
+        return CarbonImmutable::parse($endDate)->shiftTimezone($this->timezone ?? 'UTC');
     }
 
     public function getLastRunStatusAttribute(): ?RunStatus
@@ -166,15 +170,13 @@ class Task extends Model
             ?->status;
     }
 
-    public function getNextRunAtWithTimezoneAttribute(): ?string
+    public function getNextRunAtCarbonAttribute(): ?CarbonImmutable
     {
         if (! $this->next_run_at) {
             return null;
         }
 
-        $nextRunAt = Carbon::parse($this->next_run_at)->shiftTimezone($this->timezone);
-
-        return $nextRunAt->format('l, F j, Y g:i A T');
+        return CarbonImmutable::parse($this->next_run_at)->shiftTimezone($this->timezone);
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
