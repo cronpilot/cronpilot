@@ -147,7 +147,7 @@ class Task extends Model
             return null;
         }
 
-        return CarbonImmutable::parse($startDate)->shiftTimezone($this->timezone ?? 'UTC');
+        return CarbonImmutable::parse($startDate);
     }
 
     public function getEndDateAttribute(): ?CarbonImmutable
@@ -158,7 +158,7 @@ class Task extends Model
             return null;
         }
 
-        return CarbonImmutable::parse($endDate)->shiftTimezone($this->timezone ?? 'UTC');
+        return CarbonImmutable::parse($endDate);
     }
 
     public function getLastRunStatusAttribute(): ?RunStatus
