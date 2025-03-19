@@ -252,12 +252,11 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('nextRunAtWithTimezone')
                     ->label('Next run at')
-                    ->sortable(query: fn (Builder $query): Builder => $query->orderBy('next_run_at'))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('next_run_at', $direction))
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
                     ->limit(30)
-                    ->sortable(query: fn (Builder $query): Builder => $query->orderBy('schedule'))
                     ->toggleable(),
                 TextColumn::make('server.name')
                     ->placeholder('No server')
@@ -294,6 +293,7 @@ class TaskResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('runs'))
+            ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('next_run_at IS NULL, next_run_at ASC'))
             ->filters([
                 SelectFilter::make('server')
                     ->relationship('server', 'name')
