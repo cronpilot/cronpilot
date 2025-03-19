@@ -252,7 +252,7 @@ class TaskResource extends Resource
                     ->toggleable(),
                 TextColumn::make('nextRunAtWithTimezone')
                     ->label('Next run at')
-                    ->sortable(fn (Builder $query): Builder => $query->orderBy('next_run_at'))
+                    ->sortable(query: fn (Builder $query): Builder => $query->orderBy('next_run_at'))
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
