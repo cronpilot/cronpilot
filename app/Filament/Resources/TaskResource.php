@@ -127,6 +127,7 @@ class TaskResource extends Resource
                                     Frequency::YEARLY => 'year',
                                 }.'(s)')
                                 ->integer()
+                                ->minValue(1)
                                 ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
                                 ->required(),
                         ])
