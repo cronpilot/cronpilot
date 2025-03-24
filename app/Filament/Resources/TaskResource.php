@@ -468,23 +468,27 @@ class TaskResource extends Resource
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = $data['start_date'] ? CarbonImmutable::parse($data['start_date']) : today();
-        $scheduleEnd = $data['end_date'] ? CarbonImmutable::parse($data['end_date']) : null;
+        $scheduleStart = $data['start_date']
+            ? CarbonImmutable::parse($data['start_date'])->shiftTimezone($data['timezone'])
+            : null;
 
-        $scheduleStart->shiftTimezone($data['timezone']);
-        $scheduleEnd?->shiftTimezone($data['timezone']);
+        $scheduleEnd = $data['end_date']
+            ? CarbonImmutable::parse($data['end_date'])->shiftTimezone($data['timezone'])
+            : null;
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
-        $lastRunTime = max($scheduleStart->subSecond(), now()->subSecond());
+        $lastRunTime = max($scheduleStart, CarbonImmutable::now($data['timezone']))->subSecond();
 
         $upcomingRunTimes = collect();
 
         for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($data['timezone']);
+                $lastRunTime = $scheduler->next($lastRunTime);
 
                 if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
+                    $lastRunTime->timezone($data['timezone']);
+
                     $upcomingRunTimes->push($lastRunTime);
                 }
             }
