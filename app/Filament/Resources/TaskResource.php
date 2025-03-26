@@ -13,22 +13,25 @@ use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManag
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
 use App\Helpers\Recurrence;
 use App\Models\Task;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Section as FormSection;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists\Components\Card;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
@@ -48,6 +51,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Recurr\Frequency;
 use Recurr\Rule;
+use Tapp\FilamentTimezoneField\Forms\Components\TimezoneSelect;
 
 class TaskResource extends Resource
 {
@@ -63,7 +67,7 @@ class TaskResource extends Resource
     {
         return $form
             ->schema([
-                FormSection::make('Task Information')
+                Section::make('Task Information')
                     ->icon(self::ICON)
                     ->columns(2)
                     ->schema([
@@ -92,39 +96,42 @@ class TaskResource extends Resource
                             ->live()
                             ->columnSpanFull(),
                     ]),
-                FormSection::make('Schedule')
+                Section::make('Schedule')
                     ->icon('tabler-clock')
-                    ->columns(2)
                     ->visible(fn (Get $get): bool => (bool) $get('has_schedule'))
                     ->live()
                     ->schema([
-                        Select::make('frequency')
-                            ->options([
-                                Frequency::SECONDLY => 'Secondly',
-                                Frequency::MINUTELY => 'Minutely',
-                                Frequency::HOURLY => 'Hourly',
-                                Frequency::DAILY => 'Daily',
-                                Frequency::WEEKLY => 'Weekly',
-                                Frequency::MONTHLY => 'Monthly',
-                                Frequency::YEARLY => 'Yearly',
-                            ])
-                            ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
-                            ->required()
-                            ->native(false),
-                        TextInput::make('interval')
-                            ->prefix('Every')
-                            ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
-                                Frequency::SECONDLY => 'second',
-                                Frequency::MINUTELY => 'minute',
-                                Frequency::HOURLY => 'hour',
-                                Frequency::DAILY => 'day',
-                                Frequency::WEEKLY => 'week',
-                                Frequency::MONTHLY => 'month',
-                                Frequency::YEARLY => 'year',
-                            } . '(s)')
-                            ->integer()
-                            ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
-                            ->required(),
+                        Group::make([
+                            Select::make('frequency')
+                                ->options([
+                                    Frequency::SECONDLY => 'Secondly',
+                                    Frequency::MINUTELY => 'Minutely',
+                                    Frequency::HOURLY => 'Hourly',
+                                    Frequency::DAILY => 'Daily',
+                                    Frequency::WEEKLY => 'Weekly',
+                                    Frequency::MONTHLY => 'Monthly',
+                                    Frequency::YEARLY => 'Yearly',
+                                ])
+                                ->formatStateUsing(fn (?Task $record): int => $record?->frequency ?? Frequency::DAILY)
+                                ->required()
+                                ->native(false),
+                            TextInput::make('interval')
+                                ->prefix('Every')
+                                ->suffix(fn (Get $get): string => match ((int) $get('frequency')) {
+                                    Frequency::SECONDLY => 'second',
+                                    Frequency::MINUTELY => 'minute',
+                                    Frequency::HOURLY => 'hour',
+                                    Frequency::DAILY => 'day',
+                                    Frequency::WEEKLY => 'week',
+                                    Frequency::MONTHLY => 'month',
+                                    Frequency::YEARLY => 'year',
+                                }.'(s)')
+                                ->integer()
+                                ->minValue(1)
+                                ->formatStateUsing(fn (?Task $record): int => $record?->interval ?? 1)
+                                ->required(),
+                        ])
+                            ->columns(2),
                         Radio::make('by')
                             ->hiddenLabel()
                             ->options(fn (Get $get): array => match ((int) $get('frequency')) {
@@ -147,15 +154,13 @@ class TaskResource extends Resource
                             ->visible(fn (Get $get): bool => in_array($get('frequency'), [
                                 Frequency::WEEKLY,
                                 Frequency::MONTHLY,
-                            ]))
-                            ->columnSpanFull(),
+                            ])),
                         Select::make('by_day_weekly')
                             ->multiple()
                             ->label('Days')
                             ->options(Day::class)
                             ->required()
                             ->formatStateUsing(fn (?Task $record): array => $record?->byDay ?? [])
-                            ->columnSpanFull()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::WEEKLY && $get('by') === 'day'),
                         Select::make('by_month_day')
                             ->multiple()
@@ -163,7 +168,6 @@ class TaskResource extends Resource
                             ->options(range(1, 31))
                             ->required()
                             ->formatStateUsing(fn (?Task $record): array => $record?->byMonthDay ?? [])
-                            ->columnSpanFull()
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'month_day'),
                         Repeater::make('by_day_monthly')
                             ->schema([
@@ -186,7 +190,6 @@ class TaskResource extends Resource
                             ->hiddenLabel()
                             ->required()
                             ->columns(2)
-                            ->columnSpanFull()
                             ->reorderable(false)
                             ->formatStateUsing(fn (?Task $record): array => $record?->frequency === Frequency::MONTHLY && $record?->byDay
                                 ? $record->byDay
@@ -196,27 +199,33 @@ class TaskResource extends Resource
                                 ]]
                             )
                             ->visible(fn (Get $get): bool => $get('frequency') == Frequency::MONTHLY && $get('by') === 'day'),
-                        DateTimePicker::make('start_date')
-                            ->native(false)
-                            ->required()
-                            ->formatStateUsing(fn (?Task $record): Carbon => $record?->startDate ?? today()),
-                        DateTimePicker::make('end_date')
-                            ->native(false)
-                            ->formatStateUsing(fn (?Task $record): ?Carbon => $record?->endDate),
-                        Placeholder::make('upcoming_run_times')
-                            ->content(fn (Get $get): HtmlString => new HtmlString(
-                                '<ul class="list-disc list-inside">'
-                                .implode(
-                                    self::getUpcomingRunTimes($get())
-                                        ->map(fn (string $runTime): string => "<li>{$runTime}</li>")
-                                        ->toArray()
-                                )
-                                .'</ul>'
-                            ))
-                            ->columnSpanFull(),
+                        Group::make([
+                            DateTimePicker::make('start_date')
+                                ->native(false),
+                            DateTimePicker::make('end_date')
+                                ->native(false),
+                            TimezoneSelect::make('timezone')
+                                ->native(false)
+                                ->searchable()
+                                ->formatStateUsing(fn (?Task $record): string => $record->timezone ?? auth()->user()->timezone),
+                        ])
+                            ->columns(3),
+                        Group::make([
+                            Placeholder::make('upcoming_run_times_task_timezone')
+                                ->label(fn (Get $get): string => "Upcoming run times ({$get('timezone')})")
+                                ->content(fn (Get $get): HtmlString => self::getUpcomingRunTimesHTMLList($get(), $get('timezone'))),
+                            Placeholder::make('upcoming_run_times_user_timezone')
+                                ->label(function (): string {
+                                    $userTimezone = auth()->user()->timezone;
+
+                                    return "Upcoming run times ({$userTimezone})";
+                                })
+                                ->content(fn (Get $get): HtmlString => self::getUpcomingRunTimesHTMLList($get(), auth()->user()->timezone))
+                                ->visible(fn (Get $get): bool => $get('timezone') !== auth()->user()->timezone),
+                        ])
+                            ->columns(2),
                         Placeholder::make('rrule_preview')
-                            ->content(fn (Get $get): string => self::getRrule($get())->getString())
-                            ->columnSpanFull(),
+                            ->content(fn (Get $get): string => self::getRrule($get())->getString()),
                     ]),
             ]);
     }
@@ -243,15 +252,20 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('next_run_at')
+                TextColumn::make('nextRunAtCarbon')
+                    ->label('Next run at')
                     ->dateTime()
-                    ->sortable()
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('next_run_at', $direction))
                     ->toggleable(),
                 TextColumn::make('scheduleForHumans')
                     ->label('Schedule')
                     ->limit(30)
-                    ->sortable()
                     ->toggleable(),
+                TextColumn::make('command')
+                    ->fontFamily(FontFamily::Mono)
+                    ->limit(30)
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('server.name')
                     ->placeholder('No server')
                     ->icon(ServerResource::ICON)
@@ -283,6 +297,8 @@ class TaskResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('runs'))
+            ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('next_run_at IS NULL, next_run_at ASC'))
             ->filters([
                 SelectFilter::make('server')
                     ->relationship('server', 'name')
@@ -325,8 +341,14 @@ class TaskResource extends Resource
                         TextEntry::make('status')
                             ->badge(),
                         TextEntry::make('description')
-                            ->columnSpanFull()
-                            ->color('gray'),
+                            ->color('gray')
+                            ->columnSpanFull(),
+                        Card::make('Command')
+                            ->schema([
+                                TextEntry::make('command')
+                                    ->fontFamily(FontFamily::Mono)
+                                    ->hiddenLabel(),
+                            ]),
                         TextEntry::make('server.name')
                             ->placeholder('No server')
                             ->icon(ServerResource::ICON)
@@ -344,14 +366,17 @@ class TaskResource extends Resource
                             ->label('Schedule'),
                         TextEntry::make('lastRunStatus')
                             ->badge(),
+                        TextEntry::make('upcomingRunTimes')
+                            ->dateTime()
+                            ->listWithLineBreaks()
+                            ->bulleted(),
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->hidden(fn (Task $record): bool => ! $record->deleted_at),
+                            ->hiddenLabel(fn (Task $record): bool => ! $record->deleted_at)
+                            ->placeholder(''),
                         TextEntry::make('created_at')
                             ->dateTime(),
                         TextEntry::make('updated_at')
-                            ->dateTime(),
-                        TextEntry::make('next_run_at')
                             ->dateTime(),
                     ]),
             ]);
@@ -385,9 +410,11 @@ class TaskResource extends Resource
 
     public static function mutateFormData(array $data): array
     {
-        $data['schedule'] = $data['has_schedule']
-            ? self::getRrule($data)->getString()
-            : null;
+        if ($data['has_schedule']) {
+            $data['schedule'] = self::getRrule($data)->getString();
+
+            $data['next_run_at'] = self::getUpcomingRunTimes($data, 1)->first();
+        }
 
         return $data;
     }
@@ -396,8 +423,11 @@ class TaskResource extends Resource
     {
         $rrule = (new Rule)
             ->setFreq((int) $data['frequency'])
-            ->setInterval($data['interval'])
-            ->setStartDate(new Carbon($data['start_date']), true);
+            ->setInterval($data['interval']);
+
+        if ($data['start_date']) {
+            $rrule->setStartDate(CarbonImmutable::parse($data['start_date']), true);
+        }
 
         switch ((int) $data['frequency']) {
             case Frequency::WEEKLY:
@@ -428,32 +458,57 @@ class TaskResource extends Resource
         }
 
         if ($data['end_date']) {
-            $rrule->setEndDate(new Carbon($data['end_date']));
+            $rrule->setEndDate(CarbonImmutable::parse($data['end_date']));
         }
 
         return $rrule;
     }
 
-    private static function getUpcomingRunTimes(array $data): Collection
+    private static function getUpcomingRunTimes(array $data, int $count = 3): Collection
     {
         $schedule = self::getRrule($data)->getString();
 
-        $scheduleStart = max(new Carbon($data['start_date']), now());
+        $scheduleStart = $data['start_date']
+            ? CarbonImmutable::parse($data['start_date'])->shiftTimezone($data['timezone'])
+            : null;
+
+        $scheduleEnd = $data['end_date']
+            ? CarbonImmutable::parse($data['end_date'])->shiftTimezone($data['timezone'])
+            : null;
 
         $scheduler = new Recurrence($schedule, $scheduleStart);
 
-        $lastRunTime = $scheduleStart->subSecond();
+        $lastRunTime = max($scheduleStart, CarbonImmutable::now($data['timezone']))->subSecond();
 
         $upcomingRunTimes = collect();
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < $count; $i++) {
             if ($lastRunTime) {
                 $lastRunTime = $scheduler->next($lastRunTime);
 
-                $upcomingRunTimes->push($lastRunTime->toDayDateTimeString());
+                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
+                    $lastRunTime->timezone($data['timezone']);
+
+                    $upcomingRunTimes->push($lastRunTime);
+                }
             }
         }
 
         return $upcomingRunTimes;
+    }
+
+    private static function getUpcomingRunTimesHTMLList(array $data, string $timezone, int $count = 3): HtmlString
+    {
+        return new HtmlString(
+            '<ul class="list-disc list-inside">'
+            .implode(
+                self::getUpcomingRunTimes($data, $count)
+                    ->map(
+                        fn (CarbonImmutable $runTime): string => "<li>{$runTime->timezone($timezone)->toDayDateTimeString()}</li>"
+                    )
+                    ->toArray()
+            )
+            .'</ul>'
+        );
     }
 }

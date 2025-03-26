@@ -15,10 +15,14 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         TextColumn::configureUsing(
-            fn (TextColumn $column): TextColumn => $column->placeholder('-')
+            fn (TextColumn $column): TextColumn => $column
+                ->placeholder('-')
+                ->timezone(auth()->user()->timezone)
         );
         TextEntry::configureUsing(
-            fn (TextEntry $entry): TextEntry => $entry->placeholder('-')
+            fn (TextEntry $entry): TextEntry => $entry
+                ->placeholder('-')
+                ->timezone(auth()->user()->timezone)
         );
     }
 

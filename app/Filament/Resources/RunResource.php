@@ -67,14 +67,14 @@ class RunResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: $showTask),
                 TextColumn::make('created_at')
                     ->label('Start time')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable(),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -139,11 +139,11 @@ class RunResource extends Resource
                             }),
                         TextEntry::make('created_at')
                             ->label('Start time')
-                            ->dateTime(),
+                            ->datetime(),
                         TextEntry::make('updated_at')
-                            ->dateTime(),
+                            ->datetime(),
                         TextEntry::make('deleted_at')
-                            ->dateTime()
+                            ->datetime()
                             ->hidden(fn (Run $record): bool => ! $record->deleted_at),
                     ]),
             ]);

@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
 use App\Helpers\Recurrence;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Recurr\Frequency;
 use Recurr\Rule;
 use Recurr\Transformer\TextTransformer;
@@ -59,6 +60,13 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function scopeReadyToRun(Builder $query): void
+    {
+        $query->where('next_run_at', '<=', now())
+            ->where('status', '!=', TaskStatus::DISABLED)
+            ->where('paused', '!=', true);
     }
 
     public function getRruleAttribute(): ?Rule
@@ -132,34 +140,67 @@ class Task extends Model
         return $this->rrule?->getByMonthDay();
     }
 
-    public function getStartDateAttribute(): ?Carbon
+    public function getStartDateAttribute(): ?CarbonImmutable
     {
         if (! $this->rrule?->getStartDate()) {
             return null;
         }
 
-        return new Carbon($this->rrule->getStartDate());
+        return new CarbonImmutable($this->rrule->getStartDate());
     }
 
-    public function scopeReadyToRun(Builder $query): void
-    {
-        $query->where('next_run_at', '<=', now())
-            ->where('status', '!=', TaskStatus::DISABLED)
-            ->where('paused', '!=', true);
-    }
-
-    public function getEndDateAttribute(): ?Carbon
+    public function getEndDateAttribute(): ?CarbonImmutable
     {
         if (! $this->rrule?->getEndDate()) {
             return null;
         }
 
-        return new Carbon($this->rrule->getEndDate());
+        return new CarbonImmutable($this->rrule->getEndDate());
     }
 
     public function getLastRunStatusAttribute(): ?RunStatus
     {
-        return $this->runs()->latest()->first(['status'])?->status;
+        return $this->runs
+            ->where('status', '!=', RunStatus::RUNNING)
+            ->sortBy('created_at')
+            ->first()
+            ?->status;
+    }
+
+    public function getNextRunAtCarbonAttribute(): ?CarbonImmutable
+    {
+        if (! $this->next_run_at) {
+            return null;
+        }
+
+        return CarbonImmutable::parse($this->next_run_at)->shiftTimezone($this->timezone);
+    }
+
+    public function getUpcomingRunTimesAttribute(): Collection
+    {
+        $scheduleStart = $this->startDate?->copy() ?? today();
+        $scheduleEnd = $this->endDate?->copy();
+
+        $scheduleStart->shiftTimezone($this->timezone);
+        $scheduleEnd?->shiftTimezone($this->timezone);
+
+        $scheduler = new Recurrence($this->schedule, $scheduleStart);
+
+        $lastRunTime = max($scheduleStart->subSecond(), now()->subSecond());
+
+        $upcomingRunTimes = collect();
+
+        for ($i = 0; $i < 3; $i++) {
+            if ($lastRunTime) {
+                $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($this->timezone);
+
+                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
+                    $upcomingRunTimes->push($lastRunTime);
+                }
+            }
+        }
+
+        return $upcomingRunTimes;
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void

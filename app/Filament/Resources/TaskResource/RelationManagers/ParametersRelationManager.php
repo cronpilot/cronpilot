@@ -90,15 +90,18 @@ class ParametersRelationManager extends RelationManager
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->datetime()
+                    ->timezone(self::getUserTimezone())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -119,5 +122,10 @@ class ParametersRelationManager extends RelationManager
                     RestoreBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getUserTimezone(): string
+    {
+        return auth()->user()->timezone;
     }
 }

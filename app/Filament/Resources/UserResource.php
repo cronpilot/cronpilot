@@ -7,10 +7,13 @@ use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\User;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -21,7 +24,7 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Hash;
+use Tapp\FilamentTimezoneField\Forms\Components\TimezoneSelect;
 
 class UserResource extends Resource
 {
@@ -38,7 +41,36 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(User::getForm());
+            ->schema([
+                Section::make('User')
+                    ->description('Information about this user')
+                    ->icon(UserResource::ICON)
+                    ->schema([
+                        FileUpload::make('avatar_url')
+                            ->label('Avatar')
+                            ->columnSpanFull()
+                            ->avatar()
+                            ->directory('avatars')
+                            ->imageEditor()
+                            ->maxSize(1024 * 1024 * 10),
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255),
+                        TimezoneSelect::make('timezone')
+                            ->searchable()
+                            ->native(false),
+                        TextInput::make('password')
+                            ->password()
+                            ->dehydrateStateUsing(fn (?string $state): string => Hash::make($state))
+                            ->dehydrated(fn (?string $state): bool => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create')
+                            ->maxLength(255),
+                    ])->columns(2),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -48,26 +80,29 @@ class UserResource extends Resource
                 ImageColumn::make('avatar_url')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
                     ),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
                     ->icon('tabler-mail')
                     ->searchable(),
+                TextColumn::make('timezone')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('email_verified_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable(),
                 TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->datetime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -91,7 +126,7 @@ class UserResource extends Resource
     private static function getInfolistForm(): array
     {
         return [
-            Section::make('User Information')
+            InfolistSection::make('User Information')
                 ->icon(self::ICON)
                 ->columns(3)
                 ->description('View user information')
@@ -100,25 +135,26 @@ class UserResource extends Resource
                         ->label('Avatar')
                         ->circular()
                         ->defaultImageUrl(
-                            fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=' . urlencode($record->name)
+                            fn (User $record): string => 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name='.urlencode($record->name)
                         ),
                     Group::make()
                         ->schema([
                             TextEntry::make('name'),
                             TextEntry::make('email')
                                 ->icon('tabler-mail'),
+                            TextEntry::make('timezone'),
                         ]),
                     Group::make()
                         ->schema([
                             TextEntry::make('email_verified_at')
-                                ->dateTime(),
+                                ->datetime(),
                             TextEntry::make('deleted_at')
                                 ->hidden(fn (User $record): bool => ! $record->deleted_at)
-                                ->dateTime(),
+                                ->datetime(),
                             TextEntry::make('created_at')
-                                ->dateTime(),
+                                ->datetime(),
                             TextEntry::make('updated_at')
-                                ->dateTime(),
+                                ->datetime(),
                         ]),
                 ]),
         ];

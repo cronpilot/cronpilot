@@ -12,7 +12,8 @@
         "owenvoke/blade-fontawesome": "^2.6",
         "phpseclib/phpseclib": "^3.0",
         "ryangjchandler/blade-tabler-icons": "^2.3",
-        "simshaun/recurr": "^5.0"
+        "simshaun/recurr": "^5.0",
+        "tapp/filament-timezone-field": "^3.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",
