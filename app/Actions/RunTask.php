@@ -48,7 +48,7 @@ class RunTask
             $key = $credential->passphrase
                 ? PublicKeyLoader::load($credential->ssh_private_key, $credential->passphrase)
                 : PublicKeyLoader::load($credential->ssh_private_key);
-            $ssh = new SSH2($server->hostname, $server->ssh_port);
+            $ssh = new SSH2($server->hostname, $server->ssh_port, 0);
 
             if (! $ssh->login($credential->username, $key)) {
                 throw new Exception('Login failed');
