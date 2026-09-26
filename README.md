@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="public/images/cronpilot-logo-with-bg.svg" alt="CronPilot" width="320">
+  <img src="public/images/cronpilot-logo-with-bg.svg" alt="Cron Pilot" width="320">
 </p>
 
 <h3 align="center">Your scheduled jobs shouldn't be invisible.</h3>
 
 <p align="center">
-  CronPilot is an open-source, self-hosted control panel for scheduling, running and monitoring jobs on your servers.
+  Cron Pilot is an open-source, self-hosted control panel for scheduling, running and monitoring jobs on your servers.
 </p>
 
 <p align="center">
@@ -23,9 +23,9 @@
 Cron works beautifully, right up until it doesn't. Then you're SSHing into production to read a crontab, grepping
 logs to work out whether last night's backup ran, and discovering that an important job quietly stopped three days ago.
 
-CronPilot gives your scheduled jobs a home: one place to define them, run them, and see exactly what happened.
+Cron Pilot gives your scheduled jobs a home: one place to define them, run them, and see exactly what happened.
 
-| With crontab                        | With CronPilot                                           |
+| With crontab                        | With Cron Pilot                                           |
 |-------------------------------------|----------------------------------------------------------|
 | SSH into each server to edit jobs   | Manage every job from one web UI                         |
 | Hand-write `*/15 9-17 * * 1-5`      | Build schedules visually and preview the next runs       |
@@ -55,7 +55,7 @@ CronPilot gives your scheduled jobs a home: one place to define them, run them, 
 
 ## Quick start
 
-> A one-command Docker install is on the [roadmap](#roadmap). Until then, CronPilot runs like any Laravel app.
+> A one-command Docker install is on the [roadmap](#roadmap). Until then, Cron Pilot runs like any Laravel app.
 
 **Requirements:** PHP 8.4+, Composer, Node.js 18+, and MySQL or MariaDB.
 
@@ -86,7 +86,7 @@ For local development you can seed an admin user instead. Set `ADMIN_EMAIL` and 
 
 ### Start the scheduler and a queue worker
 
-CronPilot needs **both** of these running. The scheduler decides which tasks are due, and the queue worker runs them.
+Cron Pilot needs **both** of these running. The scheduler decides which tasks are due, and the queue worker runs them.
 Without a worker, no task will ever run.
 
 ```bash
@@ -137,16 +137,16 @@ alone is no longer enough.
 
 ## Roadmap
 
-CronPilot is being relaunched as a proper open-source project. Next up:
+Cron Pilot is being relaunched as a proper open-source project. Next up:
 
 - **Failure alerts:** email and chat notifications when a job fails, or when it doesn't run at all.
 - **Docker install:** `docker compose up -d` and you're running, with no PHP or Node setup.
-- **CronPilot Agent:** a small open-source agent you install on each server. It connects out to CronPilot, so
-  CronPilot never has to hold SSH credentials for your servers.
+- **Cron Pilot Agent:** a small open-source agent you install on each server. It connects out to Cron Pilot, so
+  Cron Pilot never has to hold SSH credentials for your servers.
 
 Ideas and feedback are very welcome. [Open an issue](https://github.com/cronpilot/cronpilot/issues).
 
-## Why I built CronPilot
+## Why I built Cron Pilot
 
 Cron isn't evil. We just keep making the same mistakes with it.
 
@@ -166,7 +166,7 @@ So I started writing down what I actually needed:
 - **An off switch,** so pausing a job doesn't mean commenting out a crontab line.
 - **To be told when something fails,** instead of hearing about it from a customer.
 
-CronPilot is that tool. It does the first five today, and failure alerts are next on the [roadmap](#roadmap).
+Cron Pilot is that tool. It does the first five today, and failure alerts are next on the [roadmap](#roadmap).
 
 I told the full story in a talk,
 [Cron Jobs Gone Wrong: The Top Mistakes That Keep Your Tasks From Ticking](https://www.slideshare.net/slideshow/cron-jobs-gone-wrong-the-top-mistakes-that-keep-your-tasks-from-ticking/279478111),
@@ -187,4 +187,4 @@ Contributions are welcome. For anything bigger than a small fix, please open an 
 
 ## License
 
-CronPilot is open-source software licensed under the [MIT license](LICENSE).
+Cron Pilot is open-source software licensed under the [MIT license](LICENSE).

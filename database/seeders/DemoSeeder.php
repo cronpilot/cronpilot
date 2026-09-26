@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * A realistic, fictional tenant for exploring CronPilot and taking screenshots.
+ * A realistic, fictional tenant for exploring Cron Pilot and taking screenshots.
  *
  *     php artisan db:seed --class=DemoSeeder
  *
