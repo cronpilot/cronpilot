@@ -32,6 +32,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -331,9 +332,11 @@ class TaskResource extends Resource
                         $runTask->handle($record->id, ignoreLock: $record->isRunning());
                     }),
                 ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    RestoreAction::make(),
+                ]),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
