@@ -172,7 +172,7 @@ class DemoSeeder extends Seeder
         $task = $this->task($worker, $deploy, 'Rebuild search index',
             'Reindex products into the search cluster. Paused during the cluster upgrade.',
             'php artisan scout:import "App\\Models\\Product"',
-            'FREQ=HOURLY;DTSTART=20260101T000000;INTERVAL=6',
+            'FREQ=HOURLY;DTSTART='.$this->today('00:00').';INTERVAL=6',
             paused: true);
         foreach (range(5, 2) as $daysAgo) {
             $this->addRun($task, RunStatus::SUCCESSFUL, $this->at($daysAgo, '12:00'), rand(300, 420), "Imported [App\\Models\\Product] models up to ID: 48213\nAll [App\\Models\\Product] records have been imported.");

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\RunStatus;
+use App\Enums\TaskStatus;
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\Tenant;
@@ -39,6 +40,8 @@ it('seeds every run state the product shows', function () {
 
 it('schedules active tasks and leaves the paused one without a next run', function () {
     $this->seed(DemoSeeder::class);
+
+    expect(Task::pluck('status')->unique()->all())->toBe([TaskStatus::ACTIVE]);
 
     $paused = demoTask('Rebuild search index');
     expect($paused->paused)->toBeTrue()
