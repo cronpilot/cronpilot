@@ -39,6 +39,25 @@ class Task extends Model
         'paused' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // A paused task has no next run. Clearing it on every save while
+        // paused keeps the edit form and Run now from setting one again, and
+        // resuming schedules the next run from now, so the task waits for its
+        // next scheduled time instead of running straight away to catch up.
+        static::saving(function (Task $task): void {
+            if ($task->paused) {
+                $task->next_run_at = null;
+
+                return;
+            }
+
+            if ($task->getOriginal('paused') && $task->schedule) {
+                $task->scheduleNextRun(now());
+            }
+        });
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
