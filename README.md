@@ -74,6 +74,13 @@ php artisan migrate
 Serve the app with [Laravel Herd](https://herd.laravel.com/) (it will be at `http://cronpilot.test`) or with
 `php artisan serve` (at `http://localhost:8000`), then **register an account** and create your first tenant.
 
+**Want something to explore first?** Seed a demo tenant with realistic tasks and a week of run history, then sign in as
+`demo@cronpilot.test` with the password `password`:
+
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
 For local development you can seed an admin user instead. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` and run
 `php artisan db:seed`.
 
@@ -132,8 +139,8 @@ alone is no longer enough.
 
 CronPilot is being relaunched as a proper open-source project. Next up:
 
+- **Failure alerts:** email and chat notifications when a job fails, or when it doesn't run at all.
 - **Docker install:** `docker compose up -d` and you're running, with no PHP or Node setup.
-- **Demo data:** a sample tenant with realistic tasks and runs, so there's something to explore straight away.
 - **CronPilot Agent:** a small open-source agent you install on each server. It connects out to CronPilot, so
   CronPilot never has to hold SSH credentials for your servers.
 
@@ -141,16 +148,25 @@ Ideas and feedback are very welcome. [Open an issue](https://github.com/cronpilo
 
 ## Why I built CronPilot
 
-<!-- TODO(Peter): this is a first draft written from our planning notes. Rewrite it in your own words. -->
+Cron isn't evil. We just keep making the same mistakes with it.
 
-I've managed scheduled jobs in production for years. Eventually I got tired of SSHing into servers, editing crontabs,
-grepping logs, and finding out that an important job had silently stopped running days ago. At one point I was using
-Jenkins as a cron manager, just to get the visibility and control that cron doesn't give you.
+I've spent years building and running PHP systems, and I've made or cleaned up after most of those mistakes. The one
+that stuck with me: a cron job that processed recurring donations stopped running, and nobody noticed for three days.
+We found out when someone contacted support. By then, hundreds of thousands of dollars in donations had been missed.
 
-CronPilot is the tool I wanted instead.
+Nothing was wrong with cron itself. The job failed silently, on a server nobody was watching, with its output going
+nowhere.
 
-I also gave a talk about the problem:
-[Cron Jobs Gone Wrong: The Top Mistakes That Keep Your Tasks From Ticking](https://www.slideshare.net/slideshow/cron-jobs-gone-wrong-the-top-mistakes-that-keep-your-tasks-from-ticking/279478111).
+The best fix I found at the time was to run our crons through Jenkins. It gave us one web interface for every job,
+permissions, captured output, success and failure notifications, a way to run a job on demand, and an on/off switch.
+It worked, but Jenkins is a CI server, and it was never built for this.
+
+CronPilot is the tool I wanted instead: one place to schedule, run and check on every job, with an interface built for
+scheduled jobs. Failure alerts, the lesson of that three-day outage, are next on the [roadmap](#roadmap).
+
+I told the full story in a talk,
+[Cron Jobs Gone Wrong: The Top Mistakes That Keep Your Tasks From Ticking](https://www.slideshare.net/slideshow/cron-jobs-gone-wrong-the-top-mistakes-that-keep-your-tasks-from-ticking/279478111),
+which covers the seven most common cron mistakes and how to avoid them.
 
 ## Contributing
 
