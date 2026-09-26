@@ -35,6 +35,7 @@ class Task extends Model
 
     protected $casts = [
         'status' => TaskStatus::class,
+        'allow_overlapping' => 'boolean',
     ];
 
     public function tenant(): BelongsTo
@@ -60,6 +61,11 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function isRunning(): bool
+    {
+        return $this->runs()->where('status', RunStatus::RUNNING)->exists();
     }
 
     public function scopeReadyToRun(Builder $query): void
@@ -158,11 +164,16 @@ class Task extends Model
         return new CarbonImmutable($this->rrule->getEndDate());
     }
 
+    /**
+     * The outcome of the most recent run that actually executed.
+     *
+     * Skipped runs are left out so a skip can't hide the failure before it.
+     */
     public function getLastRunStatusAttribute(): ?RunStatus
     {
         return $this->runs
-            ->where('status', '!=', RunStatus::RUNNING)
-            ->sortBy('created_at')
+            ->whereNotIn('status', [RunStatus::RUNNING, RunStatus::SKIPPED])
+            ->sortBy([['created_at', 'desc'], ['id', 'desc']])
             ->first()
             ?->status;
     }

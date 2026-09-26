@@ -20,8 +20,10 @@ class ViewTask extends ViewRecord
             Action::make('run')
                 ->color('success')
                 ->requiresConfirmation()
+                ->modalDescription(fn (): ?string => TaskResource::runWarning($this->record))
+                ->modalIconColor(fn (): string => $this->record->isRunning() ? 'warning' : 'success')
                 ->action(function (RunTask $runTask): void {
-                    $runTask->handle($this->record->id);
+                    $runTask->handle($this->record->id, ignoreLock: $this->record->isRunning());
                 }),
             EditAction::make(),
             DeleteAction::make(),
