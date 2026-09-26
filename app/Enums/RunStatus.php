@@ -11,6 +11,7 @@ enum RunStatus: string implements HasColor, HasIcon, HasLabel
     case SUCCESSFUL = 'Successful';
     case RUNNING = 'Running';
     case FAILED = 'Failed';
+    case SKIPPED = 'Skipped';
 
     public function getLabel(): string
     {
@@ -23,6 +24,7 @@ enum RunStatus: string implements HasColor, HasIcon, HasLabel
             self::SUCCESSFUL => 'success',
             self::RUNNING => 'gray',
             self::FAILED => 'danger',
+            self::SKIPPED => 'warning',
         };
     }
 
@@ -32,6 +34,7 @@ enum RunStatus: string implements HasColor, HasIcon, HasLabel
             self::SUCCESSFUL => 'tabler-check',
             self::RUNNING => 'tabler-loader',
             self::FAILED => 'tabler-x',
+            self::SKIPPED => 'tabler-player-skip-forward',
         };
     }
 }
