@@ -82,11 +82,31 @@ or if you want to keep the scheduler running, you can use the following command:
 php artisan schedule:work
 ```
 
+### Running the Queue Worker
+
+**Cron Pilot requires a running queue worker.** Due tasks are dispatched to the queue rather
+than executed inline by the scheduler, so without a worker no task will ever run:
+
+```bash
+php artisan queue:work
+```
+
+This applies in development and in production. If you are upgrading an existing installation
+that predates this change, adding a worker is required — the scheduler alone is no longer
+enough.
+
+By default a task never runs twice at once: if a run comes due while the previous one is still
+in progress, it is recorded as **Skipped**. Turn on **Allow overlapping runs** on a task to let
+its runs overlap. Run locks are held in the cache, so the cache store must support
+[atomic locks](https://laravel.com/docs/cache#atomic-locks) (the default `database` store does).
+
 ## Deployment (with Cron)
 Be sure to add the following to your server's cron file to run the scheduler every minute:
 ```bash
 * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+Run a queue worker alongside it, supervised by Supervisor, systemd, or Laravel Horizon.
 
 ## Contributing
 

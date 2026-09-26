@@ -91,6 +91,10 @@ class TaskResource extends Resource
                             ->columnSpanFull(),
                         Textarea::make('command')
                             ->columnSpanFull(),
+                        Toggle::make('allow_overlapping')
+                            ->label('Allow overlapping runs')
+                            ->helperText('When off, a scheduled run is skipped if the previous run is still in progress.')
+                            ->columnSpanFull(),
                         Toggle::make('has_schedule')
                             ->formatStateUsing(fn (?Task $record): bool => (bool) $record?->schedule ?? true)
                             ->live()
@@ -312,8 +316,10 @@ class TaskResource extends Resource
                     ->color('success')
                     ->icon('tabler-player-play-filled')
                     ->requiresConfirmation()
+                    ->modalDescription(fn (Task $record): ?string => static::runWarning($record))
+                    ->modalIconColor(fn (Task $record): string => $record->isRunning() ? 'warning' : 'success')
                     ->action(function (Task $record, RunTask $runTask): void {
-                        $runTask->handle($record->id);
+                        $runTask->handle($record->id, ignoreLock: $record->isRunning());
                     }),
                 ViewAction::make(),
                 EditAction::make(),
@@ -327,6 +333,19 @@ class TaskResource extends Resource
                     RestoreBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * The Run now confirmation text, warning when the task is already running.
+     *
+     * Confirming a run while another is in progress starts a second, overlapping
+     * run rather than being skipped like a scheduled one would be.
+     */
+    public static function runWarning(Task $task): ?string
+    {
+        return $task->isRunning()
+            ? 'This task is already running. Running it now will start a second run alongside it.'
+            : null;
     }
 
     public static function infolist(Infolist $infolist, bool $showServer = true): Infolist

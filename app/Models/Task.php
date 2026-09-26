@@ -35,6 +35,7 @@ class Task extends Model
 
     protected $casts = [
         'status' => TaskStatus::class,
+        'allow_overlapping' => 'boolean',
     ];
 
     public function tenant(): BelongsTo
@@ -60,6 +61,11 @@ class Task extends Model
     public function runs(): HasMany
     {
         return $this->hasMany(Run::class);
+    }
+
+    public function isRunning(): bool
+    {
+        return $this->runs()->where('status', RunStatus::RUNNING)->exists();
     }
 
     public function scopeReadyToRun(Builder $query): void

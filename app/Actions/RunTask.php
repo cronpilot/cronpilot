@@ -6,6 +6,7 @@ use App\Enums\RunStatus;
 use App\Models\Run;
 use App\Models\Task;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Net\SSH2;
@@ -14,9 +15,20 @@ use Throwable;
 class RunTask
 {
     /**
+     * How long a task's run lock is held before it expires on its own, so a
+     * crashed worker can't block the task forever. Matches RunTaskJob's timeout.
+     */
+    public const LOCK_SECONDS = 3600;
+
+    /**
+     * Run a task, unless a previous run of it is still in progress.
+     *
+     * Tasks that allow overlapping runs, and manual runs the user has chosen
+     * to force, skip the lock entirely.
+     *
      * @throws Exception
      */
-    public function handle(int $taskId): void
+    public function handle(int $taskId, bool $ignoreLock = false): void
     {
         $task = Task::find($taskId);
         if (! $task) {
@@ -24,6 +36,45 @@ class RunTask
             return;
         }
 
+        if ($task->allow_overlapping || $ignoreLock) {
+            $this->run($task);
+
+            return;
+        }
+
+        $lock = Cache::lock("tasks.{$task->id}.running", self::LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            $this->recordSkipped($task);
+
+            return;
+        }
+
+        try {
+            $this->run($task);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function recordSkipped(Task $task): void
+    {
+        Log::info("Skipping task {$task->id}: previous run still in progress");
+
+        $run = new Run;
+        $run->tenant_id = $task->tenant->id;
+        $run->task_id = $task->id;
+        $run->status = RunStatus::SKIPPED;
+        $run->output = '[SKIPPED] Previous run still in progress.';
+        $run->duration = 0;
+        $run->save();
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function run(Task $task): void
+    {
         $run = new Run;
         $run->tenant_id = $task->tenant->id;
         $run->task_id = $task->id;
