@@ -36,6 +36,7 @@ class Task extends Model
     protected $casts = [
         'status' => TaskStatus::class,
         'allow_overlapping' => 'boolean',
+        'paused' => 'boolean',
     ];
 
     public function tenant(): BelongsTo

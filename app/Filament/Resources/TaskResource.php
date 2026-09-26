@@ -42,6 +42,7 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -90,6 +91,11 @@ class TaskResource extends Resource
                         Textarea::make('description')
                             ->columnSpanFull(),
                         Textarea::make('command')
+                            ->columnSpanFull(),
+                        Toggle::make('paused')
+                            ->label('Pause task')
+                            ->helperText('A paused task keeps its schedule but is not run until it is resumed.')
+                            ->onColor('warning')
                             ->columnSpanFull(),
                         Toggle::make('allow_overlapping')
                             ->label('Allow overlapping runs')
@@ -251,6 +257,10 @@ class TaskResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
+                ToggleColumn::make('paused')
+                    ->onColor('warning')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('lastRunStatus')
                     ->badge()
                     ->sortable()
@@ -358,7 +368,10 @@ class TaskResource extends Resource
                     ->schema([
                         TextEntry::make('name'),
                         TextEntry::make('status')
-                            ->badge(),
+                            ->badge()
+                            ->hint(fn (Task $record): ?string => $record->paused ? 'Paused' : null)
+                            ->hintIcon(fn (Task $record): ?string => $record->paused ? 'tabler-player-pause' : null)
+                            ->hintColor('warning'),
                         TextEntry::make('description')
                             ->color('gray')
                             ->columnSpanFull(),
