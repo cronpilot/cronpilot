@@ -167,6 +167,4 @@ Contributions are welcome. For anything bigger than a small fix, please open an 
 
 ## License
 
-<!-- TODO(Peter): confirm the license. The previous README said MIT, but there is no LICENSE file in the repo. -->
-
 CronPilot is open-source software licensed under the [MIT license](LICENSE).
