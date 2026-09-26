@@ -11,7 +11,6 @@ use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\Pages\ViewTask;
 use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
-use App\Helpers\Recurrence;
 use App\Models\Task;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
@@ -448,7 +447,7 @@ class TaskResource extends Resource
         if ($data['has_schedule']) {
             $data['schedule'] = self::getRrule($data)->getString();
 
-            $data['next_run_at'] = self::getUpcomingRunTimes($data, 1)->first();
+            $data['next_run_at'] = self::getUpcomingRunTimes($data, 1)->first()?->utc()->toDateTimeString();
         }
 
         return $data;
@@ -493,43 +492,26 @@ class TaskResource extends Resource
         }
 
         if ($data['end_date']) {
-            $rrule->setEndDate(CarbonImmutable::parse($data['end_date']));
+            $rrule->setUntil(CarbonImmutable::parse($data['end_date']));
         }
 
         return $rrule;
     }
 
+    /**
+     * The next run times for the schedule currently in the form.
+     *
+     * The unsaved schedule goes through the same calculation the scheduler
+     * uses, so the preview always matches when the task will really run.
+     */
     private static function getUpcomingRunTimes(array $data, int $count = 3): Collection
     {
-        $schedule = self::getRrule($data)->getString();
+        $task = new Task([
+            'schedule' => self::getRrule($data)->getString(),
+            'timezone' => $data['timezone'] ?? null,
+        ]);
 
-        $scheduleStart = $data['start_date']
-            ? CarbonImmutable::parse($data['start_date'])->shiftTimezone($data['timezone'])
-            : null;
-
-        $scheduleEnd = $data['end_date']
-            ? CarbonImmutable::parse($data['end_date'])->shiftTimezone($data['timezone'])
-            : null;
-
-        $scheduler = new Recurrence($schedule, $scheduleStart);
-
-        $lastRunTime = max($scheduleStart, CarbonImmutable::now($data['timezone']))->subSecond();
-
-        $upcomingRunTimes = collect();
-
-        for ($i = 0; $i < $count; $i++) {
-            if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime);
-
-                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
-                    $lastRunTime->timezone($data['timezone']);
-
-                    $upcomingRunTimes->push($lastRunTime);
-                }
-            }
-        }
-
-        return $upcomingRunTimes;
+        return $task->runTimesAfter(now(), $count);
     }
 
     private static function getUpcomingRunTimesHTMLList(array $data, string $timezone, int $count = 3): HtmlString
