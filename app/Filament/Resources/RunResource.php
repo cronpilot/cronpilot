@@ -6,6 +6,7 @@ use App\Filament\Resources\RunResource\Pages\CreateRun;
 use App\Filament\Resources\RunResource\Pages\ListRuns;
 use App\Filament\Resources\RunResource\Pages\ViewRun;
 use App\Filament\Resources\RunResource\RelationManagers\ParametersRelationManager;
+use App\Filament\TenantScope;
 use App\Models\Run;
 use App\Models\Task;
 use App\Models\User;
@@ -81,7 +82,7 @@ class RunResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('task')
-                    ->relationship('task', 'name')
+                    ->relationship('task', 'name', TenantScope::query())
                     ->preload()
                     ->visible($showTask)
                     ->multiple(),

@@ -11,6 +11,7 @@ use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\Pages\ViewTask;
 use App\Filament\Resources\TaskResource\RelationManagers\ParametersRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\RunsRelationManager;
+use App\Filament\TenantScope;
 use App\Models\Task;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\DateTimePicker;
@@ -50,6 +51,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\Rules\Exists;
 use Recurr\Frequency;
 use Recurr\Rule;
 use Tapp\FilamentTimezoneField\Forms\Components\TimezoneSelect;
@@ -80,12 +82,14 @@ class TaskResource extends Resource
                             ->default(TaskStatus::ACTIVE)
                             ->options(TaskStatus::class),
                         Select::make('server_id')
-                            ->relationship('server', 'name')
+                            ->relationship('server', 'name', TenantScope::query())
+                            ->rule(fn (): Exists => TenantScope::exists('servers'))
                             ->searchable()
                             ->preload()
                             ->visible($serverSelect),
                         Select::make('server_credential_id')
-                            ->relationship('serverCredential', 'title')
+                            ->relationship('serverCredential', 'title', TenantScope::query())
+                            ->rule(fn (): Exists => TenantScope::exists('server_credentials'))
                             ->preload()
                             ->searchable(),
                         Textarea::make('description')
@@ -315,7 +319,7 @@ class TaskResource extends Resource
             ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('next_run_at IS NULL, next_run_at ASC'))
             ->filters([
                 SelectFilter::make('server')
-                    ->relationship('server', 'name')
+                    ->relationship('server', 'name', TenantScope::query())
                     ->preload()
                     ->multiple()
                     ->visible($showServer),
