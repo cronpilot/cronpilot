@@ -1,132 +1,190 @@
-# Cron Pilot
+<p align="center">
+  <img src="public/images/cronpilot-logo-with-bg.svg" alt="Cron Pilot" width="320">
+</p>
 
-"Cron Pilot: Run, Repeat, Relax" is a robust service for managing repeated tasks or cron jobs. Built with Laravel using 
-the Filament package, it supports multi-tenant architectures, making it ideal for companies managing multiple projects 
-or clients.
+<h3 align="center">Your scheduled jobs shouldn't be invisible.</h3>
+
+<p align="center">
+  Cron Pilot is an open-source, self-hosted control panel for scheduling, running and monitoring jobs on your servers.
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#deploying">Deploying</a> ·
+  <a href="#roadmap">Roadmap</a>
+</p>
+
+---
+
+## Stop debugging cron jobs at 3 AM
+
+Cron works beautifully, right up until it doesn't. Then you're SSHing into production to read a crontab, grepping
+logs to work out whether last night's backup ran, and discovering that an important job quietly stopped three days ago.
+
+Cron Pilot gives your scheduled jobs a home: one place to define them, run them, and see exactly what happened.
+
+| With crontab                        | With Cron Pilot                                           |
+|-------------------------------------|----------------------------------------------------------|
+| SSH into each server to edit jobs   | Manage every job from one web UI                         |
+| Hand-write `*/15 9-17 * * 1-5`      | Build schedules visually and preview the next runs       |
+| `grep` through logs for output      | Every run's output, exit status and duration, kept       |
+| "Did that actually run last night?" | ✓ Successful, ✗ Failed or ⏭ Skipped, at a glance          |
+| Wait for the schedule to test a job | Run it now                                               |
+| Comment out a line to stop a job    | Pause and resume with a toggle                           |
 
 ## Features
 
-- **Multi-Tenant Support:** Isolated data and resources for each tenant.
-- **User-Friendly Interface:** Built with the Filament package for a sleek and intuitive UI.
-- **Flexible Task Scheduling:** Easily manage and schedule cron jobs.
-- **Notifications:** Get notified about the status of your tasks.
-- **Task History:** Track the execution history of your tasks.
-- **Role-Based Access Control:** Secure your tasks with fine-grained permissions.
+- **Visual schedule builder.** Schedules from every second to once a year, specific weekdays, days of the month
+  ("the second Tuesday"), start and end dates, and a timezone per task. The form previews the next run times as you
+  edit, in the task's timezone and in yours.
+- **Runs on your servers.** Tasks run over SSH on the servers you register, using the credentials you choose for each
+  task. Private keys and passphrases are stored encrypted.
+- **Run history.** Every run records its output, exit status and duration, so you can see what went wrong without
+  logging into the server.
+- **Run now.** Trigger any task on demand, with a warning if it's already running.
+- **No accidental overlaps.** By default a task never runs twice at once. A run that comes due while the previous one
+  is still going is recorded as *Skipped* instead of piling up. Turn on *Allow overlapping runs* for tasks where that's
+  fine.
+- **Pause and resume.** Pause a task from the task list. When you resume it, it picks up at its next scheduled time
+  rather than running straight away to catch up.
+- **Tenants.** Keep teams, clients or projects apart. Each tenant has its own servers, credentials, tasks and run
+  history, and people can belong to several tenants.
+- **Open source and self-hosted.** Your commands, output and credentials stay on your own infrastructure.
 
-## Installation
+## Quick start
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/cronpilot/cronpilot.git
-    cd cronpilot
-    ```
+> A one-command Docker install is on the [roadmap](#roadmap). Until then, Cron Pilot runs like any Laravel app.
 
-2. **Install dependencies:**
-    ```bash
-    composer install
-    npm install
-    ```
+**Requirements:** PHP 8.4+, Composer, Node.js 18+, and MySQL or MariaDB.
 
-3. **Set up environment variables:**
-   Copy the `.env.example` file to `.env` and configure your environment variables, including your database settings.
-
-4. **Run the migrations:**
-    ```bash
-    php artisan migrate
-    ```
-
-5. **Seed the database (optional):**
-    ```bash
-    php artisan db:seed
-    ```
-
-6. **Serve the application:**
-    Laravel Herd is recommended approach for running locally. It is a fast and easy way to run your Laravel applications
-    locally. If you don't have Laravel Herd installed, you can download it from [Laravel Herd](https://herd.laravel.com/).
-
-    Once Laravel Herd is installed and configured, you can simply visit `http://cronpilot.test` in your browser to
-    access your application.
-
-    Another alternative is to use artisan
-    ```bash
-    php artisan serve
-    ```
-
-## Usage
-
-Once installed, you can access the application at `http://localhost:8000`. Register a new account or log in with your
-credentials. You can then start creating and managing tasks (cron jobs) through the Filament interface.
-
-### Creating a Task
-
-1. Navigate to the Tasks section.
-2. Click on "Add Task."
-3. Fill in the task details, including the name, schedule, and command.
-4. Save the task.
-
-### Managing Tenants
-
-1. Navigate to the Tenants section.
-2. Click on "Add Tenant."
-3. Fill in the tenant details, including the name and domain.
-4. Save the tenant.
-
-### Running The Scheduler in Development Without Cron
-You can run the scheduler in development without using cron by running the following command:
 ```bash
-php artisan schedule:run
+git clone https://github.com/cronpilot/cronpilot.git
+cd cronpilot
+
+composer install
+npm install && npm run build
+
+cp .env.example .env        # then set your DB_* values
+php artisan key:generate
+php artisan migrate
 ```
 
-or if you want to keep the scheduler running, you can use the following command:
+Serve the app with [Laravel Herd](https://herd.laravel.com/) (it will be at `http://cronpilot.test`) or with
+`php artisan serve` (at `http://localhost:8000`), then **register an account** and create your first tenant.
+
+**Want something to explore first?** Seed a demo tenant with realistic tasks and a week of run history, then sign in as
+`demo@cronpilot.test` with the password `password`:
+
 ```bash
-php artisan schedule:work
+php artisan db:seed --class=DemoSeeder
 ```
 
-### Running the Queue Worker
+For local development you can seed an admin user instead. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` and run
+`php artisan db:seed`.
 
-**Cron Pilot requires a running queue worker.** Due tasks are dispatched to the queue rather
-than executed inline by the scheduler, so without a worker no task will ever run:
+### Start the scheduler and a queue worker
+
+Cron Pilot needs **both** of these running. The scheduler decides which tasks are due, and the queue worker runs them.
+Without a worker, no task will ever run.
+
+```bash
+php artisan schedule:work   # checks for due tasks every minute
+php artisan queue:work      # runs them
+```
+
+Then add a server and a credential, create a task, and press **Run** to see it work.
+
+## How it works
+
+```text
+ schedule:run (every minute)
+        │  finds due tasks, moves each one's next run forward
+        ▼
+      queue ──────► queue worker ──SSH──► your server
+                         │                     │
+                         │              runs the command
+                         ▼                     │
+                   run history ◄── output, exit status, duration
+```
+
+- The scheduler only **queues** due tasks, so one slow command never delays the others.
+- Each task's next run is claimed before it's queued, so a task waiting for a worker isn't queued twice, even when
+  scheduler runs overlap.
+- A per-task lock (held in the cache, one hour at most) stops a task overlapping itself, unless you allow it.
+
+## Deploying
+
+Run the scheduler from cron, every minute:
+
+```bash
+* * * * * cd /path-to-cronpilot && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Keep a queue worker running alongside it, under Supervisor, systemd, or
+[Laravel Horizon](https://laravel.com/docs/horizon):
 
 ```bash
 php artisan queue:work
 ```
 
-This applies in development and in production. If you are upgrading an existing installation
-that predates this change, adding a worker is required — the scheduler alone is no longer
-enough.
+Run locks are held in the cache, so your cache store must support
+[atomic locks](https://laravel.com/docs/cache#atomic-locks). The default `database` store does.
 
-By default a task never runs twice at once: if a run comes due while the previous one is still
-in progress, it is recorded as **Skipped**. Turn on **Allow overlapping runs** on a task to let
-its runs overlap. Run locks are held in the cache, so the cache store must support
-[atomic locks](https://laravel.com/docs/cache#atomic-locks) (the default `database` store does).
+**Upgrading from an older version?** Tasks now run on the queue, so you need to add a queue worker. The scheduler
+alone is no longer enough.
 
-## Deployment (with Cron)
-Be sure to add the following to your server's cron file to run the scheduler every minute:
-```bash
-* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
-```
+## Roadmap
 
-Run a queue worker alongside it, supervised by Supervisor, systemd, or Laravel Horizon.
+Cron Pilot is being relaunched as a proper open-source project. Next up:
+
+- **Failure alerts:** email and chat notifications when a job fails, or when it doesn't run at all.
+- **Docker install:** `docker compose up -d` and you're running, with no PHP or Node setup.
+- **Cron Pilot Agent:** a small open-source agent you install on each server. It connects out to Cron Pilot, so
+  Cron Pilot never has to hold SSH credentials for your servers.
+
+Ideas and feedback are very welcome. [Open an issue](https://github.com/cronpilot/cronpilot/issues).
+
+## Why I built Cron Pilot
+
+Cron isn't evil. We just keep making the same mistakes with it.
+
+I've spent years building and running PHP systems, and I've made or cleaned up after most of those mistakes. The one
+that stuck with me: a cron job that processed recurring donations stopped running, and nobody noticed for three days.
+We found out when someone contacted support. By then, hundreds of thousands of dollars in donations had been missed.
+
+Nothing was wrong with cron itself. The job failed silently, on a server nobody was watching, with its output going
+nowhere. That's the problem with cron: it runs your jobs, but it doesn't help you look after them.
+
+So I started writing down what I actually needed:
+
+- **One place to see every job,** instead of a crontab on each server.
+- **The output of every run,** kept somewhere I can read it without SSHing in.
+- **A clear answer to "did it work?"**, for every run.
+- **A way to run a job right now,** to test it or rerun it after a fix.
+- **An off switch,** so pausing a job doesn't mean commenting out a crontab line.
+- **To be told when something fails,** instead of hearing about it from a customer.
+
+Cron Pilot is that tool. It does the first five today, and failure alerts are next on the [roadmap](#roadmap).
+
+I told the full story in a talk,
+[Cron Jobs Gone Wrong: The Top Mistakes That Keep Your Tasks From Ticking](https://www.slideshare.net/slideshow/cron-jobs-gone-wrong-the-top-mistakes-that-keep-your-tasks-from-ticking/279478111),
+which covers the seven most common cron mistakes and how to avoid them.
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps to contribute:
+Contributions are welcome. For anything bigger than a small fix, please open an issue first so we can talk it through.
 
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Make your changes and commit them with clear messages.
-4. Push your changes to your fork.
-5. Submit a pull request.
+1. Fork the repository and create a branch for your change.
+2. Make your change, with tests. The suite uses [Pest](https://pestphp.com/): `./vendor/bin/pest`.
+3. Open a pull request describing what changed and why.
+
+## Built with
+
+[Laravel 13](https://laravel.com/), [Filament 3](https://filamentphp.com/), [Livewire](https://livewire.laravel.com/),
+[phpseclib](https://phpseclib.com/) for SSH, and [Recurr](https://github.com/simshaun/recurr) for schedules.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
-## Acknowledgements
-
-- [Laravel](https://laravel.com/)
-- [Filament](https://filamentphp.com/)
-
----
-
-Made with ❤️ by some people who may or may not be named after a popular street medication.
+Cron Pilot is open-source software licensed under the [MIT license](LICENSE).
