@@ -57,14 +57,13 @@ Cron Pilot gives your scheduled jobs a home: one place to define them, run them,
 
 > A one-command Docker install is on the [roadmap](#roadmap). Until then, Cron Pilot runs like any Laravel app.
 
-**Requirements:** PHP 8.4+, Composer, Node.js 18+, and MySQL or MariaDB.
+**Requirements:** PHP 8.4+, Composer, and MySQL or MariaDB.
 
 ```bash
 git clone https://github.com/cronpilot/cronpilot.git
 cd cronpilot
 
 composer install
-npm install && npm run build
 
 cp .env.example .env        # then set your DB_* values
 php artisan key:generate
@@ -140,7 +139,7 @@ alone is no longer enough.
 Cron Pilot is being relaunched as a proper open-source project. Next up:
 
 - **Failure alerts:** email and chat notifications when a job fails, or when it doesn't run at all.
-- **Docker install:** `docker compose up -d` and you're running, with no PHP or Node setup.
+- **Docker install:** `docker compose up -d` and you're running, with no PHP setup.
 - **Cron Pilot Agent:** a small open-source agent you install on each server. It connects out to Cron Pilot, so
   Cron Pilot never has to hold SSH credentials for your servers.
 
