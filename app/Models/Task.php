@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\RunStatus;
 use App\Enums\TaskStatus;
-use App\Helpers\Recurrence;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +14,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Recurr\Frequency;
+use Recurr\Recurrence as Occurrence;
 use Recurr\Rule;
+use Recurr\Transformer\ArrayTransformer;
+use Recurr\Transformer\ArrayTransformerConfig;
+use Recurr\Transformer\Constraint\AfterConstraint;
 use Recurr\Transformer\TextTransformer;
 use Throwable;
 
@@ -166,22 +169,20 @@ class Task extends Model
         return $this->rrule?->getByMonthDay();
     }
 
+    /**
+     * The schedule's start, as the wall-clock time entered in the form.
+     */
     public function getStartDateAttribute(): ?CarbonImmutable
     {
-        if (! $this->rrule?->getStartDate()) {
-            return null;
-        }
-
-        return new CarbonImmutable($this->rrule->getStartDate());
+        return self::wallClockTime($this->scheduleParts()['DTSTART'] ?? null);
     }
 
+    /**
+     * The schedule's end, as the wall-clock time entered in the form.
+     */
     public function getEndDateAttribute(): ?CarbonImmutable
     {
-        if (! $this->rrule?->getEndDate()) {
-            return null;
-        }
-
-        return new CarbonImmutable($this->rrule->getEndDate());
+        return self::wallClockTime($this->scheduleParts()['UNTIL'] ?? null);
     }
 
     /**
@@ -204,39 +205,17 @@ class Task extends Model
             return null;
         }
 
-        return CarbonImmutable::parse($this->next_run_at)->shiftTimezone($this->timezone);
+        return CarbonImmutable::parse($this->next_run_at, 'UTC');
     }
 
     public function getUpcomingRunTimesAttribute(): Collection
     {
-        $scheduleStart = $this->startDate?->copy() ?? today();
-        $scheduleEnd = $this->endDate?->copy();
-
-        $scheduleStart->shiftTimezone($this->timezone);
-        $scheduleEnd?->shiftTimezone($this->timezone);
-
-        $scheduler = new Recurrence($this->schedule, $scheduleStart);
-
-        $lastRunTime = max($scheduleStart->subSecond(), now()->subSecond());
-
-        $upcomingRunTimes = collect();
-
-        for ($i = 0; $i < 3; $i++) {
-            if ($lastRunTime) {
-                $lastRunTime = $scheduler->next($lastRunTime)?->shiftTimezone($this->timezone);
-
-                if ($lastRunTime && (! $scheduleEnd || $lastRunTime < $scheduleEnd)) {
-                    $upcomingRunTimes->push($lastRunTime);
-                }
-            }
-        }
-
-        return $upcomingRunTimes;
+        return $this->runTimesAfter(now(), 3);
     }
 
     public function scheduleNextRun(CarbonInterface $lastOccurrenceTime): void
     {
-        $nextOccurrenceTime = $this->calculateNextOccurrenceAfterDate($lastOccurrenceTime);
+        $nextOccurrenceTime = $this->runTimesAfter($lastOccurrenceTime)->first();
 
         if (! $nextOccurrenceTime) {
             // @todo: have better logic to figure out what to do here
@@ -246,21 +225,123 @@ class Task extends Model
             return;
         }
 
-        $this->next_run_at = $nextOccurrenceTime;
+        $this->next_run_at = $nextOccurrenceTime->utc()->toDateTimeString();
     }
 
-    private function createRecurrence(): ?Recurrence
+    /**
+     * The next times the schedule is due after $after, in the task's timezone.
+     *
+     * A schedule's DTSTART and UNTIL are wall-clock times in the task's
+     * timezone. Recurr would read them as UTC and convert them, so they are
+     * parsed here instead, and occurrences are generated in the task's
+     * timezone so a 9 AM task stays at 9 AM across daylight saving changes.
+     * Every calculation of when a task runs goes through this method.
+     *
+     * @return Collection<int, CarbonImmutable>
+     */
+    public function runTimesAfter(CarbonInterface $after, int $count = 1): Collection
     {
+        $parts = $this->scheduleParts();
+
+        if (! $parts) {
+            return collect();
+        }
+
+        $timezone = $this->timezone ?: config('app.timezone');
+        $after = CarbonImmutable::instance($after)->setTimezone($timezone);
+
         try {
-            return new Recurrence($this->schedule, null);
+            $start = self::wallClockTime($parts['DTSTART'] ?? null, $timezone) ?? $after->startOfDay();
+            $until = self::wallClockTime($parts['UNTIL'] ?? null, $timezone);
+            unset($parts['DTSTART'], $parts['UNTIL']);
+
+            $rule = new Rule(
+                self::scheduleString($parts),
+                self::latestStartBefore($start, $after, $parts),
+                null,
+                $timezone,
+            );
+
+            $occurrences = (new ArrayTransformer((new ArrayTransformerConfig)->enableLastDayOfMonthFix()))
+                ->transform($rule, new AfterConstraint($after->toDateTime(), false));
         } catch (Throwable $e) {
-            // @todo: should we be suppressing here?
+            return collect();
+        }
+
+        return collect($occurrences)
+            ->map(fn (Occurrence $occurrence): CarbonImmutable => CarbonImmutable::instance($occurrence->getStart())->setTimezone($timezone))
+            ->reject(fn (CarbonImmutable $time): bool => $until && $time->greaterThan($until))
+            ->take($count)
+            ->values();
+    }
+
+    /**
+     * Move a fixed-period schedule's start up to just before $after.
+     *
+     * Recurr only generates a limited number of occurrences from the start,
+     * so a frequent schedule that started long ago would otherwise run out
+     * before reaching $after. Moving by whole intervals keeps the same
+     * occurrences.
+     */
+    private static function latestStartBefore(CarbonImmutable $start, CarbonImmutable $after, array $parts): CarbonImmutable
+    {
+        $unit = match ($parts['FREQ'] ?? null) {
+            'SECONDLY' => 'Seconds',
+            'MINUTELY' => 'Minutes',
+            'HOURLY' => 'Hours',
+            'DAILY' => 'Days',
+            'WEEKLY' => 'Weeks',
+            default => null,
+        };
+
+        if (! $unit || isset($parts['COUNT']) || $start->greaterThanOrEqualTo($after)) {
+            return $start;
+        }
+
+        $interval = max(1, (int) ($parts['INTERVAL'] ?? 1));
+        $intervals = intdiv((int) floor($start->{"diffIn{$unit}"}($after)), $interval) - 1;
+
+        return $intervals > 0
+            ? $start->{"add{$unit}"}($intervals * $interval)
+            : $start;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function scheduleParts(): array
+    {
+        if (! $this->schedule) {
+            return [];
+        }
+
+        return collect(explode(';', $this->schedule))
+            ->filter()
+            ->mapWithKeys(function (string $part): array {
+                [$name, $value] = array_pad(explode('=', $part, 2), 2, '');
+
+                return [strtoupper($name) => $value];
+            })
+            ->all();
+    }
+
+    /**
+     * @param  array<string, string>  $parts
+     */
+    private static function scheduleString(array $parts): string
+    {
+        return collect($parts)->map(fn (string $value, string $name): string => "{$name}={$value}")->implode(';');
+    }
+
+    /**
+     * Read an RRULE date-time (20260105T090000) as a wall-clock time.
+     */
+    private static function wallClockTime(?string $value, ?string $timezone = null): ?CarbonImmutable
+    {
+        if (! $value) {
             return null;
         }
-    }
 
-    private function calculateNextOccurrenceAfterDate(CarbonInterface $time): ?CarbonInterface
-    {
-        return $this->createRecurrence()?->next($time);
+        return CarbonImmutable::createFromFormat('Ymd\THis', rtrim($value, 'Z'), $timezone ?? config('app.timezone')) ?: null;
     }
 }
