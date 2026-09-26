@@ -60,3 +60,49 @@ it('does not mark an active task as paused on its view page', function () {
     Livewire::test(ViewTask::class, ['record' => $this->task->getRouteKey()])
         ->assertDontSee('Paused');
 });
+
+it('waits for the next scheduled time when a task is resumed from the table', function () {
+    $this->task->update(['paused' => true, 'next_run_at' => now()->subDay()]);
+
+    Livewire::test(ListTasks::class)
+        ->call('updateTableColumnState', 'paused', (string) $this->task->getKey(), false);
+
+    $task = $this->task->fresh();
+    expect($task->paused)->toBeFalse()
+        ->and($task->status)->toBe(TaskStatus::ACTIVE)
+        ->and($task->next_run_at)->toBeGreaterThan(now()->toDateTimeString());
+});
+
+it('leaves the next run alone when a task is paused', function () {
+    $this->task->update(['next_run_at' => '2026-01-01 00:00:00']);
+
+    $this->task->update(['paused' => true]);
+
+    expect($this->task->fresh()->next_run_at)->toBe('2026-01-01 00:00:00');
+});
+
+it('does not disable an unscheduled task when it is resumed', function () {
+    $task = Task::factory()->for($this->tenant)->create([
+        'status' => TaskStatus::ACTIVE,
+        'schedule' => null,
+        'next_run_at' => null,
+        'paused' => true,
+    ]);
+
+    $task->update(['paused' => false]);
+
+    expect($task->fresh())
+        ->status->toBe(TaskStatus::ACTIVE)
+        ->next_run_at->toBeNull();
+});
+
+it('does not move the next run of a newly created task', function () {
+    $task = Task::factory()->for($this->tenant)->create([
+        'status' => TaskStatus::ACTIVE,
+        'schedule' => 'FREQ=HOURLY',
+        'paused' => false,
+        'next_run_at' => '2026-01-01 00:00:00',
+    ]);
+
+    expect($task->fresh()->next_run_at)->toBe('2026-01-01 00:00:00');
+});

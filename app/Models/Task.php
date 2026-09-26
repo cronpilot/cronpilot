@@ -39,6 +39,24 @@ class Task extends Model
         'paused' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // A paused task's next_run_at stays in the past while the scheduler
+        // skips it. Moving it forward on resume makes the task wait for its
+        // next scheduled time instead of running straight away to catch up.
+        static::saving(function (Task $task): void {
+            if (
+                $task->getOriginal('paused')
+                && ! $task->paused
+                && $task->schedule
+                && $task->next_run_at
+                && CarbonImmutable::parse($task->next_run_at)->isPast()
+            ) {
+                $task->scheduleNextRun(now());
+            }
+        });
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
