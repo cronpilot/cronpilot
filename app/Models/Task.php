@@ -76,6 +76,11 @@ class Task extends Model
         return $this->belongsTo(ServerCredential::class);
     }
 
+    public function alertChannel(): BelongsTo
+    {
+        return $this->belongsTo(AlertChannel::class);
+    }
+
     public function parameters(): HasMany
     {
         return $this->hasMany(Parameter::class);

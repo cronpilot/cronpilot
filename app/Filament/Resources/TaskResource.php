@@ -92,6 +92,13 @@ class TaskResource extends Resource
                             ->rule(fn (): Exists => TenantScope::exists('server_credentials'))
                             ->preload()
                             ->searchable(),
+                        Select::make('alert_channel_id')
+                            ->label('Alert channel')
+                            ->relationship('alertChannel', 'name', TenantScope::query())
+                            ->rule(fn (): Exists => TenantScope::exists('alert_channels'))
+                            ->preload()
+                            ->placeholder('No alerts')
+                            ->helperText('Where to post in Slack when this task starts failing, and when it recovers.'),
                         Textarea::make('description')
                             ->columnSpanFull(),
                         Textarea::make('command')

@@ -31,6 +31,11 @@ class Tenant extends Model
         return $this->hasMany(ServerCredential::class);
     }
 
+    public function alertChannels(): HasMany
+    {
+        return $this->hasMany(AlertChannel::class);
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
