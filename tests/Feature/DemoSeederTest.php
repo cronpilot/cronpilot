@@ -60,3 +60,15 @@ it('replaces the previous demo data when run again', function () {
         ->and(Task::withTrashed()->count())->toBe(8)
         ->and(User::where('email', DemoSeeder::USER_EMAIL)->count())->toBe(1);
 });
+
+it('gives frequent tasks a next run within one interval of now', function (string $name, int $minutes) {
+    $this->seed(DemoSeeder::class);
+
+    $nextRun = demoTask($name)->nextRunAtCarbon;
+
+    expect($nextRun->isFuture())->toBeTrue()
+        ->and($nextRun->lessThanOrEqualTo(now()->addMinutes($minutes)))->toBeTrue();
+})->with([
+    ['Customer import', 15],
+    ['Invoice sync', 60],
+]);
