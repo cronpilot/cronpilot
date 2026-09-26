@@ -155,14 +155,18 @@ that stuck with me: a cron job that processed recurring donations stopped runnin
 We found out when someone contacted support. By then, hundreds of thousands of dollars in donations had been missed.
 
 Nothing was wrong with cron itself. The job failed silently, on a server nobody was watching, with its output going
-nowhere.
+nowhere. That's the problem with cron: it runs your jobs, but it doesn't help you look after them.
 
-The best fix I found at the time was to run our crons through Jenkins. It gave us one web interface for every job,
-permissions, captured output, success and failure notifications, a way to run a job on demand, and an on/off switch.
-It worked, but Jenkins is a CI server, and it was never built for this.
+So I started writing down what I actually needed:
 
-CronPilot is the tool I wanted instead: one place to schedule, run and check on every job, with an interface built for
-scheduled jobs. Failure alerts, the lesson of that three-day outage, are next on the [roadmap](#roadmap).
+- **One place to see every job,** instead of a crontab on each server.
+- **The output of every run,** kept somewhere I can read it without SSHing in.
+- **A clear answer to "did it work?"**, for every run.
+- **A way to run a job right now,** to test it or rerun it after a fix.
+- **An off switch,** so pausing a job doesn't mean commenting out a crontab line.
+- **To be told when something fails,** instead of hearing about it from a customer.
+
+CronPilot is that tool. It does the first five today, and failure alerts are next on the [roadmap](#roadmap).
 
 I told the full story in a talk,
 [Cron Jobs Gone Wrong: The Top Mistakes That Keep Your Tasks From Ticking](https://www.slideshare.net/slideshow/cron-jobs-gone-wrong-the-top-mistakes-that-keep-your-tasks-from-ticking/279478111),
