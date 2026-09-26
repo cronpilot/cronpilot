@@ -102,7 +102,7 @@ class DemoSeeder extends Seeder
         $task = $this->task($worker, $deploy, 'Invoice sync',
             'Pull new and updated invoices from the billing provider.',
             'php artisan invoices:sync --since=1h',
-            'FREQ=HOURLY;DTSTART='.$this->today('00:05').';INTERVAL=1');
+            'FREQ=HOURLY;DTSTART=20260101T000500;INTERVAL=1');
         foreach (range(36, 1) as $hoursAgo) {
             $startedAt = $this->now->subHours($hoursAgo)->setTime($this->now->subHours($hoursAgo)->hour, 5);
             $hoursAgo === 20
@@ -139,7 +139,7 @@ class DemoSeeder extends Seeder
         $task = $this->task($worker, $deploy, 'Customer import',
             'Import new customers and contact changes from the CRM.',
             'php artisan customers:import --source=crm',
-            'FREQ=MINUTELY;DTSTART='.$this->today('00:00').';INTERVAL=15');
+            'FREQ=MINUTELY;DTSTART=20260101T000000;INTERVAL=15');
         foreach (range(16, 1) as $slot) {
             $startedAt = $this->now->subMinutes(15 * $slot + 5);
             in_array($slot, [9, 4], true)
@@ -172,7 +172,7 @@ class DemoSeeder extends Seeder
         $task = $this->task($worker, $deploy, 'Rebuild search index',
             'Reindex products into the search cluster. Paused during the cluster upgrade.',
             'php artisan scout:import "App\\Models\\Product"',
-            'FREQ=HOURLY;DTSTART='.$this->today('00:00').';INTERVAL=6',
+            'FREQ=HOURLY;DTSTART=20260101T000000;INTERVAL=6',
             paused: true);
         foreach (range(5, 2) as $daysAgo) {
             $this->addRun($task, RunStatus::SUCCESSFUL, $this->at($daysAgo, '12:00'), rand(300, 420), "Imported [App\\Models\\Product] models up to ID: 48213\nAll [App\\Models\\Product] records have been imported.");
@@ -232,19 +232,6 @@ class DemoSeeder extends Seeder
         $run->created_at = $startedAt;
         $run->updated_at = $startedAt->addSeconds($duration);
         $run->save();
-    }
-
-    /**
-     * An RRULE DTSTART for today at the given time.
-     *
-     * Recurr only generates a limited number of occurrences from DTSTART, so
-     * frequent schedules have to start recently to have a next run at all.
-     */
-    private function today(string $time): string
-    {
-        [$hour, $minute] = explode(':', $time);
-
-        return $this->now->setTime((int) $hour, (int) $minute)->format('Ymd\THis');
     }
 
     /** A time of day, $daysAgo days back, in the demo timezone. */
